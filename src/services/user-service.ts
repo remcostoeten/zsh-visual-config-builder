@@ -1,5 +1,5 @@
-import { db } from "db";
-import { users } from "schema";
+import { db } from "@/server/db";
+import { users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function findUserByGithubId(githubId: string) {
@@ -10,9 +10,9 @@ export async function findUserByGithubId(githubId: string) {
 
 export async function createUser(userData: {
   githubId: string;
-  username: string;
-  email: string | null;
-  avatarUrl: string | null;
+  name: string;
+  email: string;
+  avatarUrl?: string;
 }) {
   const [newUser] = await db.insert(users).values(userData).returning();
   return newUser;

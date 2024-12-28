@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "db";
-import { users } from "schema";
+import { db } from "@/server/db";
+import { users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/server/env";
 import { createSession } from "@/services/session-service";
@@ -52,9 +52,9 @@ export async function GET(request: Request) {
       .insert(users)
       .values({
         githubId: userData.id.toString(),
-        username: userData.login,
         email: userData.email,
         avatarUrl: userData.avatar_url,
+        name: userData.login,
       })
       .returning();
     user = newUser;

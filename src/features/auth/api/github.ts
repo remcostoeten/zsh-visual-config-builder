@@ -1,5 +1,5 @@
-import { env } from "@/config/env";
-import { GithubUser, GithubTokenResponse } from "../types";
+import { env } from "@/server/env";
+import type { GithubUser, GithubTokenResponse } from "../types";
 
 export async function getGithubUser(accessToken: string): Promise<GithubUser> {
   const response = await fetch("https://api.github.com/user", {
@@ -36,4 +36,3 @@ export async function getGithubAccessToken(code: string): Promise<string> {
   const data: GithubTokenResponse = await response.json();
   return data.access_token;
 }
-

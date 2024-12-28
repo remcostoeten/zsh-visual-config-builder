@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 export async function getSession() {
-  const sessionId = cookies().get("sessionId")?.value;
+  const sessionId = (await cookies()).get("sessionId")?.value;
   if (!sessionId) return null;
 
   const session = await db.query.sessions.findFirst({
@@ -31,7 +31,7 @@ export async function createSession(userId: number) {
     expiresAt,
   });
 
-  cookies().set("sessionId", sessionId, {
+  (await cookies()).set("sessionId", sessionId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -40,9 +40,9 @@ export async function createSession(userId: number) {
 }
 
 export async function deleteSession() {
-  const sessionId = cookies().get("sessionId")?.value;
+  const sessionId = (await cookies()).get("sessionId")?.value;
   if (sessionId) {
     await db.delete(sessions).where(eq(sessions.id, sessionId));
-    cookies().delete("sessionId");
+    (await cookies()).delete("sessionId");
   }
 }
