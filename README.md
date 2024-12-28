@@ -57,10 +57,6 @@ src/
 4. Push to the branch
 5. Open a Pull Request
 
-## 📜 License
-
-MIT License - See [LICENSE](LICENSE) for details
-
 ## 👥 Authors
 
 - [@remcostoeten](https://github.com/remcostoeten) - Initial work
