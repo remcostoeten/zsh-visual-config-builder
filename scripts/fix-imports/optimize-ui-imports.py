@@ -6,7 +6,8 @@ import subprocess
 from multiprocessing import Pool, cpu_count
 
 def process_content(content):
-    pattern = r"import\s*{([^}]+)}\s*from\s*'@/components/ui/[^']+'(\s*;?)(\n|$)"
+    # Match both @/components/ui/ and @/shared/components/ui/ imports
+    pattern = r"import\s*{([^}]+)}\s*from\s*'@/(?:shared/)?components/ui/[^']+'(\s*;?)(\n|$)"
     
     ui_imports = set()
     
@@ -72,7 +73,7 @@ def get_tsx_files(directory):
 def main():
     parser = argparse.ArgumentParser(description="Consolidate UI imports in TypeScript files.")
     parser.add_argument("--file", help="Path to a single TypeScript file")
-    parser.add_argument("--all", action="store_true", help="Process all .tsx files in src/components and src/app directories")
+    parser.add_argument("--all", action="store_true", help="Process all .tsx files in src/components, src/app, and src/shared directories")
     parser.add_argument("--folder", help="Path to a folder to process recursively")
     args = parser.parse_args()
 
@@ -82,7 +83,7 @@ def main():
         
         if args.all:
             all_files = []
-            for directory in ['src/components', 'src/app']:
+            for directory in ['src/components', 'src/app', 'src/shared']:
                 full_path = os.path.join(project_root, directory)
                 if os.path.exists(full_path):
                     all_files.extend(get_tsx_files(full_path))
