@@ -1,27 +1,21 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { loginWithGitHub, logout } from '@/services/auth-service';
+'use server'
 
-export function useAuthMutations() {
-  const queryClient = useQueryClient();
+import { env } from '@/server/env';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-  const loginMutation = useMutation({
-    mutationKey: ['login'],
-    mutationFn: loginWithGitHub,
-    onSuccess: (url) => {
-      window.location.href = url;
-    },
+export async function login() {
+  const params = new URLSearchParams({
+    client_id: env.GITHUB_CLIENT_ID || '',
+    redirect_uri: `${env.APP_URL}/api/auth/callback`,
+    scope: 'user:email',
   });
 
-  const logoutMutation = useMutation({
-    mutationKey: ['logout'],
-    mutationFn: logout,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-    },
-  });
+  redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
+}
 
-  return {
-    loginMutation,
-    logoutMutation,
-  };
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete('token');
+  redirect('/');
 }

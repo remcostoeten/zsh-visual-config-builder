@@ -1,16 +1,21 @@
 "use client";
 
-import UserProvider from "@/features/auth/context/user-context";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
+import {
+	ThemeProvider as NextThemesProvider,
+	type ThemeProviderProps,
+} from "next-themes";
+import { useEffect, useState } from "react";
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-	return (
-		<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-			<UserProvider>
-				{children}
-				<Toaster position="top-center" />
-			</UserProvider>
-		</ThemeProvider>
-	);
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (!mounted) {
+		return null;
+	}
+
+	return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
