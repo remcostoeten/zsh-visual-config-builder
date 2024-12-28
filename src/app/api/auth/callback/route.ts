@@ -1,56 +1,83 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { db } from "@/server/db";
-import { users } from "@/server/db/schema";
-import { eq } from "drizzle-orm";
-import { env } from "@/server/env";
-import { createSession } from "@/services/session-service";
-import { getGithubAccessToken, getGithubUser } from "@/features/auth/api/github";
+import { NextRequest, NextResponse } from 'next/server';
+import { SignJWT } from 'jose';
+import { db } from '@/server/db';
+import { users } from '@/server/db/schema';
+import { eq } from 'drizzle-orm';
 
-export async function GET(request: Request) {
+const GITHUB_ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
+const GITHUB_USER_URL = 'https://api.github.com/user';
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const code = searchParams.get('code');
+
+  if (!code) {
+    return NextResponse.redirect(new URL('/login?error=no_code', request.url));
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
-    const cookieStore = await cookies();
-    const savedState = (await cookieStore.get("oauth_state"))?.value;
-
-    if (!code || !state || state !== savedState) {
-      return NextResponse.redirect(new URL("/login?error=invalid_request", request.url));
-    }
-
-    // Clear state cookie
-    await cookieStore.delete("oauth_state");
-
     // Exchange code for access token
-    const accessToken = await getGithubAccessToken(code);
-    
-    // Get GitHub user data
-    const githubUser = await getGithubUser(accessToken);
-
-    // Find or create user
-    let user = await db.query.users.findFirst({
-      where: eq(users.githubId, githubUser.id.toString()),
+    const tokenResponse = await fetch(GITHUB_ACCESS_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code,
+      }),
     });
 
-    if (!user) {
-      const [newUser] = await db.insert(users)
-        .values({
-          githubId: githubUser.id.toString(),
-          email: githubUser.email,
-          name: githubUser.login,
-          avatarUrl: githubUser.avatar_url,
-        })
-        .returning();
-      user = newUser;
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenData.access_token) {
+      return NextResponse.redirect(new URL('/login?error=no_access_token', request.url));
     }
 
-    // Create session
-    await createSession(user.id);
+    // Fetch user data from GitHub
+    const userResponse = await fetch(GITHUB_USER_URL, {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
 
-    return NextResponse.redirect(new URL("/", request.url));
+    const userData = await userResponse.json();
+
+    // Check if user exists in database, if not create new user
+    let user = await db.select().from(users).where(eq(users.githubId, userData.id.toString())).get();
+
+    if (!user) {
+      user = await db.insert(users).values({
+        githubId: userData.id.toString(),
+        email: userData.email,
+        name: userData.name,
+        avatarUrl: userData.avatar_url,
+      }).returning().get();
+    }
+
+    // Create JWT token
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const token = await new SignJWT({ userId: user.id })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('1h')
+      .sign(secret);
+
+    // Set cookie and redirect to home page
+    const response = NextResponse.redirect(new URL('/', request.url));
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 3600, // 1 hour
+    });
+
+    return response;
   } catch (error) {
-    console.error("Auth callback error:", error);
-    return NextResponse.redirect(new URL("/login?error=server_error", request.url));
+    console.error('Error in GitHub OAuth callback:', error);
+    return NextResponse.redirect(new URL('/login?error=server_error', request.url));
   }
-} 
+}
+
+
