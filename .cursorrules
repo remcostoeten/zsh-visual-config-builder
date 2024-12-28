@@ -1,0 +1,109 @@
+# Project Architecture and Standards
+architecture:
+  base_paths:
+    features: "src/features/*"     # Feature-specific modules
+    components: "src/components/*"  # Standalone components
+    shared: "src/shared/*"         # Shared/reusable code
+    services: "src/services/*"     # Service layer
+    types: "src/types/*"           # Type definitions
+    utils: "src/utils/*"           # Utility functions
+
+# Authentication
+auth:
+  implementation: "Custom GitHub OAuth with JOSE"
+  forbidden:
+    - "NextAuth.js"
+    - "Clerk"
+    - "Lucia Auth"
+  notes: |
+    Authentication is handled via custom GitHub OAuth implementation
+    using JOSE for JWT operations. All auth data is stored in our
+    Drizzle database. Do not suggest or implement other auth providers.
+
+# Code Organization
+organization:
+  features:
+    path: "src/features/*"
+    structure: |
+      feature-name/
+        ├── components/     # Feature-specific components
+        ├── services/       # Feature-specific services
+        ├── types/         # Feature-specific types
+        └── constants.ts   # Feature-specific constants
+    rules:
+      - "Each feature should be self-contained"
+      - "Shared logic goes in src/shared"
+      - "Feature-specific logic stays within feature directory"
+
+  services:
+    rules:
+      - "One service per file"
+      - "Services should be class-based"
+      - "Services handle business logic and data operations"
+      - "Services should be strongly typed"
+      - "Services should not contain UI logic"
+
+# Coding Standards
+standards:
+  typescript:
+    strictness: "strict"
+    rules:
+      - "No any types unless absolutely necessary"
+      - "Use interface for public APIs"
+      - "Use type for internal types"
+      - "Always define return types for functions"
+
+  components:
+    rules:
+      - "One component per file"
+      - "Props interface must be defined"
+      - "Use functional components"
+      - "Keep components focused and small"
+
+  documentation:
+    required:
+      - "JSDoc for complex functions"
+      - "Interface/type documentation"
+      - "Service class documentation"
+    format: |
+      /**
+       * Description of function/component
+       * @param {Type} paramName - Parameter description
+       * @returns {Type} Return value description
+       */
+
+# File Naming
+naming:
+  patterns:
+    components: "PascalCase.tsx"
+    services: "kebab-case.service.ts"
+    types: "kebab-case.types.ts"
+    utils: "kebab-case.util.ts"
+    constants: "SCREAMING_SNAKE_CASE"
+
+# State Management
+state:
+  preferred: "React Context + Hooks"
+  rules:
+    - "Prefer local state when possible"
+    - "Use Context for shared state"
+    - "Avoid prop drilling"
+
+# Error Handling
+error_handling:
+  rules:
+    - "Use custom error classes"
+    - "Always type error responses"
+    - "Handle errors at service layer"
+    - "Provide meaningful error messages"
+
+# Testing
+testing:
+  required:
+    - "Unit tests for services"
+    - "Component tests for complex UI"
+    - "Integration tests for features"
+  tools:
+    - "Vitest"
+    - "React Testing Library"
+    - "MSW for API mocking" 

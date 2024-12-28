@@ -3,16 +3,16 @@
 import { env } from "@/server/env";
 import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
-import type { GithubUser } from "@/features/auth/types";
+import type { User } from "@/server/db/schema";
 import { db } from "@/server/db";
 import { sessions } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
 const GITHUB_CLIENT_ID = env.GITHUB_CLIENT_ID;
 
-export async function getUser(): Promise<GithubUser | null> {
+export async function getUser(): Promise<User | null> {
 	const cookieStore = await cookies();
-	const sessionId = (await cookieStore.get("sessionId"))?.value;
+	const sessionId = cookieStore.get("sessionId")?.value;
 
 	if (!sessionId) {
 		return null;
@@ -29,12 +29,7 @@ export async function getUser(): Promise<GithubUser | null> {
 		return null;
 	}
 
-	return {
-		id: session.user.id,
-		login: session.user.name || "",
-		email: session.user.email,
-		avatar_url: session.user.avatarUrl || ""
-	};
+	return session.user;
 }
 
 export async function loginWithGitHub(): Promise<string> {
@@ -42,8 +37,8 @@ export async function loginWithGitHub(): Promise<string> {
 	const state = randomBytes(16).toString("hex");
 	
 	// Store the state in a cookie
-	const cookieStore = await cookies();
-	await cookieStore.set("oauth_state", state, {
+	const cookieStore = cookies();
+	cookieStore.set("oauth_state", state, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 		sameSite: "lax",
@@ -62,11 +57,11 @@ export async function loginWithGitHub(): Promise<string> {
 }
 
 export async function logout(): Promise<void> {
-	const cookieStore = await cookies();
-	const sessionId = (await cookieStore.get("sessionId"))?.value;
+	const cookieStore = cookies();
+	const sessionId = cookieStore.get("sessionId")?.value;
 
 	if (sessionId) {
 		await db.delete(sessions).where(eq(sessions.id, sessionId));
-		await cookieStore.delete("sessionId");
+		cookieStore.delete("sessionId");
 	}
 }

@@ -1,0 +1,211 @@
+# Rate Limiting Service
+
+A flexible and secure rate limiting implementation for Next.js applications, designed to handle both authenticated and unauthenticated requests with browser fingerprinting.
+
+## Features
+
+- 🔒 **Login Protection**: Prevents brute force attempts with configurable attempt limits
+- ⏱️ **Cooldown Actions**: Support for one-time actions with cooldown periods (e.g., likes, votes)
+- 🔍 **Browser Fingerprinting**: Prevents circumvention through browser/cookie clearing
+- 📱 **Responsive UI**: Built-in timer component with adaptive time display
+- ⚙️ **Configurable**: Easy to adjust limits and durations through constants
+- 📊 **Admin Dashboard**: Comprehensive monitoring of rate limit events
+- 🗺️ **Geolocation**: Track and visualize rate limit events on a map
+- 🤖 **Bot Detection**: Automated attempt detection with scoring system
+
+## Usage Examples
+
+### 1. Login Rate Limiting
+
+```typescript
+import { RateLimitService } from '@/services/rate-limit-service';
+
+const rateLimit = new RateLimitService();
+
+// Check if login attempt is allowed
+const { allowed, waitTime } = await rateLimit.checkLoginAttempt(
+  'user-123',
+  'user@example.com'
+);
+
+if (!allowed) {
+  console.log(`Too many attempts. Please wait ${waitTime}ms`);
+  return;
+}
+
+// Proceed with login...
+```
+
+### 2. One-Time Actions (e.g., Like Button)
+
+```typescript
+const handleLike = async () => {
+  const { allowed, waitTime } = await rateLimit.checkActionLimit(
+    'post-456',
+    'user-123',
+    'user@example.com'
+  );
+  
+  if (!allowed) {
+    // Show cooldown timer
+    return;
+  }
+  
+  // Proceed with like action...
+};
+```
+
+### 3. Using the Timer Component
+
+```tsx
+import { RateLimitTimer } from '@/features/rate-limit/components/rate-limit-timer';
+
+function MyComponent() {
+  return (
+    <RateLimitTimer
+      waitTimeMs={30000} // 30 seconds
+      onComplete={() => {
+        // Handle timer completion
+      }}
+    />
+  );
+}
+```
+
+## Configuration
+
+Rate limits are configured in `src/features/rate-limit/constants.ts`:
+
+```typescript
+export const RATE_LIMIT = {
+  LOGIN: {
+    MAX_ATTEMPTS: 5,      // Maximum attempts allowed
+    WINDOW_MINUTES: 15,   // Time window for attempts
+    LOCKOUT_MINUTES: 30,  // Lockout duration after max attempts
+  },
+  LIKE_ACTION: {
+    COOLDOWN_DAYS: 7,     // Cooldown period for like actions
+  },
+};
+```
+
+## Admin Monitoring
+
+The service includes a comprehensive admin dashboard at `/admin/rate-limits` that provides:
+
+1. **Real-time Overview**
+   - Active rate limits
+   - Automated attempt detection
+   - Total events tracked
+
+2. **Detailed Event Information**
+   - Timestamp and duration
+   - User information (if available)
+   - Device and browser details
+   - Geographic location with map visualization
+   - Automation score and analysis
+
+3. **Security Features**
+   - IP-based access control
+   - Detailed event logging
+   - Behavioral analysis
+   - Geographic tracking
+
+### Setting Up Admin Access
+
+Configure admin access in your environment variables:
+
+```env
+# Comma-separated list of admin IP addresses
+ADMIN_IPS=127.0.0.1,192.168.1.1
+```
+
+The admin dashboard requires:
+1. A valid IP address from the `ADMIN_IPS` list
+2. A valid authenticated session
+
+## Security Considerations
+
+1. **Browser Fingerprinting**
+   - Uses multiple factors to generate a unique identifier:
+   - User agent
+   - Screen resolution
+   - Timezone
+   - Prevents simple circumvention through cookie clearing
+
+2. **Event Logging**
+   - Comprehensive event tracking
+   - IP address logging
+   - Device fingerprinting
+   - Geographic location
+   - Behavioral patterns
+
+3. **Automation Detection**
+   - Scores attempts based on patterns
+   - Tracks time between attempts
+   - Analyzes session behavior
+   - Flags suspicious activity
+
+4. **Limitations**
+   - Client-side implementation can be circumvented
+   - Best used with server-side rate limiting
+   - Consider IP-based rate limiting for critical endpoints
+
+## Timer Component Features
+
+The `RateLimitTimer` component provides:
+
+- Automatic time formatting (days, hours, minutes, seconds)
+- Smooth countdown animation
+- Accessibility support
+- Customizable styling through className prop
+- Completion callback functionality
+
+## Best Practices
+
+1. **Login Protection**
+   - Use in combination with server-side rate limiting
+   - Monitor repeated attempts
+   - Implement progressive delays
+   - Log suspicious patterns
+
+2. **Action Limiting**
+   - Use for non-critical features
+   - Implement user feedback
+   - Monitor for abuse patterns
+   - Track geographic distribution
+
+3. **Error Handling**
+   - Clear feedback about wait times
+   - Show remaining attempts
+   - User-friendly time formats
+   - Explain lockout reasons
+
+## Demo
+
+A live demo is available at `/demo/rate-limit` showcasing:
+- Login attempt limiting
+- Like action cooldowns
+- Timer component
+- Reset functionality
+
+## Implementation Details
+
+The rate limiting service uses:
+- TypeScript for type safety
+- Browser APIs for fingerprinting
+- Local storage for persistence
+- React hooks for state management
+- Leaflet for map visualization
+- IP-API for geolocation
+- UA Parser for device detection
+
+## Contributing
+
+When extending the rate limiting service:
+1. Add new limits to the `RATE_LIMIT` constant
+2. Add corresponding storage keys to `STORAGE_KEYS`
+3. Implement new methods in `RateLimitService`
+4. Update event logging in `RateLimitEventService`
+5. Add monitoring to the admin dashboard
+6. Update documentation 

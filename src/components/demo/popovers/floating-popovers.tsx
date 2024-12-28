@@ -486,3 +486,67 @@ export {
   FloatingPanelSubmitButton as SubmitButton,
   FloatingPanelButton as Button,
 }
+
+interface AvatarDropdownProps {
+	user: {
+		name?: string | null;
+		email?: string | null;
+		avatarUrl?: string | null;
+	};
+	onSignOut: () => void;
+}
+
+export function AvatarDropdown({ user, onSignOut }: AvatarDropdownProps) {
+	return (
+		<FloatingPanelRoot>
+			<FloatingPanelTrigger title="User Menu" className="!p-0 !h-8 !w-8 overflow-hidden rounded-full border border-border hover:border-border/80">
+				{user.avatarUrl ? (
+					<img 
+						src={user.avatarUrl} 
+						alt={user.name || 'User avatar'} 
+						className="h-full w-full object-cover"
+					/>
+				) : (
+					<div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground">
+						{user.name?.[0]?.toUpperCase() || 'U'}
+					</div>
+				)}
+			</FloatingPanelTrigger>
+			<FloatingPanelContent className="w-56 p-0 bg-popover text-popover-foreground border border-border shadow-md">
+				<FloatingPanelHeader className="border-b border-border px-2 py-1.5">
+					<div className="flex items-center space-x-3">
+						<div className="h-9 w-9 rounded-full overflow-hidden border border-border">
+							{user.avatarUrl ? (
+								<img 
+									src={user.avatarUrl} 
+									alt={user.name || 'User avatar'} 
+									className="h-full w-full object-cover"
+								/>
+							) : (
+								<div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+									{user.name?.[0]?.toUpperCase() || 'U'}
+								</div>
+							)}
+						</div>
+						<div className="flex flex-col space-y-1">
+							<span className="font-medium text-sm">{user.name || 'User'}</span>
+							{user.email && (
+								<span className="text-xs text-muted-foreground truncate max-w-[150px]">
+									{user.email}
+								</span>
+							)}
+						</div>
+					</div>
+				</FloatingPanelHeader>
+				<FloatingPanelBody className="p-1">
+					<FloatingPanelButton 
+						onClick={onSignOut}
+						className="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+					>
+						Sign out
+					</FloatingPanelButton>
+				</FloatingPanelBody>
+			</FloatingPanelContent>
+		</FloatingPanelRoot>
+	);
+}
