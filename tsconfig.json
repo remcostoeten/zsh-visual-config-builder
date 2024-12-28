@@ -19,7 +19,10 @@
 			}
 		],
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"ui": ["./src/shared/components/ui/index.ts"],
+			"db": ["./src/server/db/index.ts"],
+			"schema": ["./src/server/db/schema.ts"]
 		}
 	},
 	"include": [
