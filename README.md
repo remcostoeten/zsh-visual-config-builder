@@ -1,62 +1,56 @@
+# Zshlyfig - Your Zsh/Bash Configuration Helper
+> *"Helping you build structured, modular, and maintainable shell configurations."*
 
-# ZSH Config Builder
-<small>Readme mostly AI generated so have to edit someday</small>
+> **Tired of wrestling with messy dotfiles**, like `.zshrc`, `.bashrc`, or `.bash_profile`? Spending hours crafting scripts only to lose them in an unmanageable 600-line config file? Meet **Zshlyfig**—an application designed to streamline your shell configuration with a visual and modular approach.
 
+> With Zshlyfig, you can:
+>
+> - Visually build a clean, structured architecture for your shell configs.
+> - Choose your preferred installation method—via a simple CLI or a zip download.
+> - Store and manage your configurations safely in your account or sync them seamlessly to your GitHub repository.
 
-A visual editor for creating and managing modular ZSH/Bash configurations. Split your monolithic `.zshrc` into maintainable, focused modules with a beautiful drag-and-drop interface.
+<br/>
+
+>  -<i><span style="font-size: 0.5rem; font-weight: 300;">Oh, and no worries. </i>You can also use web editors with various utilities to enhance the developer experience (DX) for Bash/shell scripting. You can programmatically create your configuration instead of relying on the visual builder.</span> 
+
 
 ![ZSH Config Builder Screenshot](https://source.unsplash.com/random/1200x630/?code)
 
-## Local development if you want that for some reason
+---
 
-1. `git clone https://github.com/remcostoeten/zsh-config-builder.git`
-2. Run `pnpm install`
-3. Start the dev server: `pnpm dev`
+## ✨ Features  
 
-Not mandatory to run but if you want oauth2 to work and a database you need to set up the following:
+> - **🎨 Visual Editor**: A node-based interface for easy ZSH configuration.  
+> - **📦 Modular Configs**: Break down your config into manageable, reusable files.  
+> - **✅ Real-Time Validation**: Automatic shell syntax checks as you work.  
+> - **🔌 Dependency Management**: Smart tools to handle script dependencies.  
+> - **💡 Script Snippets**: Built-in helpers and time-saving script templates.  
+> - **🎯 Drag-and-Drop**: Effortless UI for quick adjustments.  
+> - **🚀 One-Click Commands**: Instantly generate scripts and configs.
 
-1. `cp .env.example .env`
-2. If you have the turso CLI installed run `pnpm gen:db` and paste those keys in the `.env`. Otherwise go to https://turso.tech/ and create a new database.
-3. Retrieve github client id and secret from https://github.com/settings/applications/new
-4. run `pnpm gen` to generate the schema and `pnpm dbpush` to push it to the database. If that doesn't work run `pnpm drizzle-kit generate` and `the same but push`
-5. `git checkout master; git pull; git checkout -b feature/yourcontribution;git push
+---
 
-## ✨ Features
+## 🔧 Installation  
 
-- 🎨 Visual node-based editor for ZSH configurations
-- 📦 Split configs into modular, reusable files
-- ✅ Real-time shell syntax validation
-- 🔌 Smart dependency management
-- 💡 Built-in shell scripting helpers and snippets
-- 🎯 Drag-and-drop interface
-- 🚀 One-click command generation
+> ### Option 1: Install via CLI  
+> Run this one-liner in your terminal:  
+> ```bash  
+> curl -fsSL https://example.com/install.sh | bash  
+> ```  
 
-## 🛠️ Tech Stack
+> ### Option 2: Download the Zip  
+> [Download the latest release here](https://example.com).
 
-- Next.js 15 + TypeScript
-- Tailwind CSS
-- Monaco Edito
-- Shell-parse for validation
+---
 
-## 📦 Project Structure
+## 💾 Sync and Save  
 
-```
-src/
-  ├── components/     # React components
-  ├── hooks/         # Custom React hooks
-  ├── utils/         # Utility functions
-  ├── types/         # TypeScript types
-  └── config/        # App configuration
-```
+> Never worry about losing your configurations again!  
+> - Store your setup in your Zshlyfig account.  
+> - Or, sync directly to your GitHub repository with one click.
 
-## 🤝 Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+## 👨‍💻 Built with 💙 by [@remcostoeten](https://github.com/remcostoeten)  
 
-## 👥 Authors
-
-- [@remcostoeten](https://github.com/remcostoeten) - Initial work
+> Contributions, suggestions, and stars 🌟 are always welcome!
