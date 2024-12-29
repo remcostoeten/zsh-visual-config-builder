@@ -8,6 +8,13 @@
 			"when": 1735356691794,
 			"tag": "0000_yellow_magus",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1735409916066,
+			"tag": "0001_fast_makkari",
+			"breakpoints": true
 		}
 	]
 }

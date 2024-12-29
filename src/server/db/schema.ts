@@ -1,6 +1,12 @@
 import { sql } from "drizzle-orm";
 import { text, integer, sqliteTable } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
+import {
+	rateLimits,
+	rateLimitAttempts,
+	rateLimitsRelations,
+	rateLimitAttemptsRelations,
+} from "../../features/rate-limit/api/schema";
 
 export const users = sqliteTable("users", {
 	id: integer("id").primaryKey(),
@@ -23,6 +29,7 @@ export const sessions = sqliteTable("sessions", {
 
 export const usersRelations = relations(users, ({ many }) => ({
 	sessions: many(sessions),
+	rateLimits: many(rateLimits),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -34,3 +41,12 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
+
+export {
+	rateLimits,
+	rateLimitAttempts,
+	rateLimitsRelations,
+	rateLimitAttemptsRelations,
+	type RateLimit,
+	type RateLimitAttempt,
+} from "../../features/rate-limit/api/schema";

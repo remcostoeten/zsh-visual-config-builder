@@ -9,6 +9,7 @@ import { sessions } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
 const GITHUB_CLIENT_ID = env.GITHUB_CLIENT_ID;
+const APP_URL = env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 export async function getUser(): Promise<GithubUser | null> {
 	const cookieStore = await cookies();
@@ -51,9 +52,13 @@ export async function loginWithGitHub(): Promise<string> {
 		maxAge: 60 * 10 // 10 minutes
 	});
 
+	// Ensure callback URL is properly formatted
+	const callbackUrl = new URL("/api/auth/callback", APP_URL).toString();
+	console.log("Callback URL:", callbackUrl); // For debugging
+
 	const params = new URLSearchParams({
 		client_id: GITHUB_CLIENT_ID,
-		redirect_uri: new URL("/api/auth/callback", env.APP_URL).toString(),
+		redirect_uri: callbackUrl,
 		scope: "read:user user:email",
 		state
 	});

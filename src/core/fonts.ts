@@ -1,11 +1,19 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 
-export const geistSans = Geist({
-	variable: "--font-geist-sans",
+export const primaryFont = Outfit({
+	variable: "--font-primary",
 	subsets: ["latin"],
+	display: 'swap',
 });
 
-export const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+export const secondaryFont = Space_Grotesk({
+	variable: "--font-secondary",
 	subsets: ["latin"],
+	display: 'swap',
+});
+
+export const monoFont = JetBrains_Mono({
+	variable: "--font-mono",
+	subsets: ["latin"],
+	display: 'swap',
 });

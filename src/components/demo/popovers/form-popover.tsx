@@ -63,7 +63,7 @@ export function PopoverForm({
 						{showCloseButton && (
 							<div className="absolute -top-[5px] left-1/2 transform -translate-x-1/2 w-[12px] h-[26px] flex items-center justify-center z-20">
 								{/* biome-ignore lint/a11y/useButtonType: <explanation> */}
-<button
+								<button
 									onClick={() => setOpen(false)}
 									className="absolute z-10 -mt-1 flex items-center justify-center w-[10px] h-[6px] text-muted-foreground hover:text-foreground focus:outline-none  rounded-full "
 									aria-label="Close"

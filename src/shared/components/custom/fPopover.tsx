@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useFloating, offset, flip, shift, autoUpdate } from "@floating-ui/react-dom-interactions";
+import {
+	useFloating,
+	offset,
+	flip,
+	shift,
+	autoUpdate,
+} from "@floating-ui/react-dom-interactions";
 
 interface FPopoverProps {
 	trigger: React.ReactNode;
@@ -50,7 +56,9 @@ export function FPopover({ trigger, content, openOnHover }: FPopoverProps) {
 			onClick={handleClick}
 			onKeyDown={handleKeyDown}
 		>
-			<div ref={refs.reference as React.RefObject<HTMLDivElement>}>{trigger}</div>
+			<div ref={refs.reference as React.RefObject<HTMLDivElement>}>
+				{trigger}
+			</div>
 			{isOpen && (
 				<div
 					ref={refs.floating as React.RefObject<HTMLDivElement>}

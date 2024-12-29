@@ -86,10 +86,7 @@ interface FloatingPanelRootProps {
 	className?: ClassValue;
 }
 
-function FloatingPanelRoot({
-	children,
-	className,
-}: FloatingPanelRootProps) {
+function FloatingPanelRoot({ children, className }: FloatingPanelRootProps) {
 	const floatingPanelLogic = useFloatingPanelLogic();
 
 	return (
@@ -107,7 +104,7 @@ interface FloatingPanelTriggerProps {
 	title: string;
 }
 
- function FloatingPanelTrigger({
+function FloatingPanelTrigger({
 	children,
 	className,
 	title,
@@ -157,7 +154,7 @@ interface FloatingPanelContentProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelContent({
+function FloatingPanelContent({
 	children,
 	className,
 }: FloatingPanelContentProps) {
@@ -259,7 +256,7 @@ interface FloatingPanelFormProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelForm({
+function FloatingPanelForm({
 	children,
 	onSubmit,
 	className,
@@ -288,7 +285,7 @@ interface FloatingPanelLabelProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelLabel({
+function FloatingPanelLabel({
 	children,
 	htmlFor,
 	className,
@@ -314,10 +311,7 @@ interface FloatingPanelTextareaProps {
 	id?: string;
 }
 
- function FloatingPanelTextarea({
-	className,
-	id,
-}: FloatingPanelTextareaProps) {
+function FloatingPanelTextarea({ className, id }: FloatingPanelTextareaProps) {
 	const { note, setNote } = useFloatingPanel();
 
 	return (
@@ -339,7 +333,7 @@ interface FloatingPanelHeaderProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelHeader({
+function FloatingPanelHeader({
 	children,
 	className,
 }: FloatingPanelHeaderProps) {
@@ -363,10 +357,7 @@ interface FloatingPanelBodyProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelBody({
-	children,
-	className,
-}: FloatingPanelBodyProps) {
+function FloatingPanelBody({ children, className }: FloatingPanelBodyProps) {
 	return (
 		<motion.div
 			className={cn("p-4", className)}
@@ -384,7 +375,7 @@ interface FloatingPanelFooterProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelFooter({
+function FloatingPanelFooter({
 	children,
 	className,
 }: FloatingPanelFooterProps) {
@@ -404,7 +395,7 @@ interface FloatingPanelCloseButtonProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelCloseButton({
+function FloatingPanelCloseButton({
 	className,
 }: FloatingPanelCloseButtonProps) {
 	const { closeFloatingPanel } = useFloatingPanel();
@@ -427,7 +418,7 @@ interface FloatingPanelSubmitButtonProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelSubmitButton({
+function FloatingPanelSubmitButton({
 	className,
 }: FloatingPanelSubmitButtonProps) {
 	return (
@@ -452,7 +443,7 @@ interface FloatingPanelButtonProps {
 	className?: ClassValue;
 }
 
- function FloatingPanelButton({
+function FloatingPanelButton({
 	children,
 	onClick,
 	className,
@@ -473,16 +464,16 @@ interface FloatingPanelButtonProps {
 }
 
 export {
-  FloatingPanelRoot as Root,
-  FloatingPanelTrigger as Trigger,
-  FloatingPanelContent as Content,
-  FloatingPanelForm as Form,
-  FloatingPanelLabel as Label,
-  FloatingPanelTextarea as Textarea,
-  FloatingPanelHeader as Header,
-  FloatingPanelBody as Body,
-  FloatingPanelFooter as Footer,
-  FloatingPanelCloseButton as CloseButton,
-  FloatingPanelSubmitButton as SubmitButton,
-  FloatingPanelButton as Button,
-}
+	FloatingPanelRoot as Root,
+	FloatingPanelTrigger as Trigger,
+	FloatingPanelContent as Content,
+	FloatingPanelForm as Form,
+	FloatingPanelLabel as Label,
+	FloatingPanelTextarea as Textarea,
+	FloatingPanelHeader as Header,
+	FloatingPanelBody as Body,
+	FloatingPanelFooter as Footer,
+	FloatingPanelCloseButton as CloseButton,
+	FloatingPanelSubmitButton as SubmitButton,
+	FloatingPanelButton as Button,
+};

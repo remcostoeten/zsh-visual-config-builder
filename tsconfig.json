@@ -21,6 +21,7 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"ui": ["./src/shared/components/ui/index.ts"],
+			"helpers": ["./src/shared/helpers/index.ts"],
 			"db": ["./src/server/db/index.ts"],
 			"schema": ["./src/server/db/schema.ts"]
 		}

@@ -1,0 +1,105 @@
+# Rate Limiting Feature
+
+The rate limiting system provides robust protection against abuse by tracking and limiting user actions across the application.
+
+## Database Schema
+
+### Rate Limits Table
+The main table tracking rate limit states for users:
+
+```typescript
+export const rateLimits = {
+    id: integer
+    userId: integer          // References users table
+    identifier: string       // User ID, session ID, or IP
+    configKey: string        // Which rate limit configuration
+    attempts: integer        // Number of attempts made
+    lastAttempt: timestamp   // Last attempt timestamp
+    resetAt: timestamp       // When the rate limit resets
+    createdAt: timestamp
+    updatedAt: timestamp
+}
+```
+
+### Rate Limit Attempts Table
+Detailed tracking of each attempt with device and geo information:
+
+```typescript
+export const rateLimitAttempts = {
+    id: integer
+    rateLimitId: integer    // References rate_limits table
+    
+    // Device Info
+    userAgent: string
+    browser: string
+    browserVersion: string
+    os: string
+    osVersion: string
+    device: string
+    deviceType: string
+    
+    // Network & Geo Info
+    ip: string
+    timeBetweenAttempts: integer
+    country: string
+    region: string
+    city: string
+    latitude: string
+    longitude: string
+    timezone: string
+    isp: string
+    asn: string
+    
+    // Security Flags
+    isProxy: boolean
+    isVpn: boolean
+    isTor: boolean
+    
+    createdAt: timestamp
+}
+```
+
+## Usage
+
+### React Hook
+```typescript
+const { 
+    isRateLimited,
+    remaining,
+    resetAt,
+    attempt,
+    deviceInfo 
+} = useRateLimit({
+    config: {
+        maxAttempts: 5,
+        duration: 60000, // 1 minute
+        key: 'login'
+    },
+    identifier: 'user-123'
+});
+```
+
+### Configuration Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| maxAttempts | number | Maximum attempts allowed |
+| duration | number | Time window in milliseconds |
+| key | string | Unique identifier for the rate limit type |
+| identifier | string | User/session identifier |
+
+## Security Features
+
+- IP-based tracking
+- Device fingerprinting
+- Geo-location tracking
+- VPN/Proxy detection
+- Time between attempts analysis
+
+## Database Relations
+
+The rate limit system integrates with the user system through the following relations:
+
+- Each user can have multiple rate limits
+- Each rate limit can have multiple attempts
+- Each attempt stores detailed device and location information 
