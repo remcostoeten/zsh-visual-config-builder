@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { Download } from "lucide-react";
-import type { ConfigNode } from "./types/config";
-import DraggableNode from "./components/draggable-node";
-import AnimatedConnector from "./components/animated-connector";
-import PathConfig from "./components/path-config";
-import QuickAddMenu from "./components/quick-add-menu";
-import Introduction from "./components/introduction";
-import Footer from "./components/footer";
-import { useNodePositions } from "./hooks/useNodePositions";
-import { useQuickAdd } from "./hooks/useQuickAdd";
-import { initialConfig } from "./config/initialConfig";
-import { generateCommands } from "./utils/commands";
-import Toolbar from "./components/toolbar";
-import CanvasInfoBar from "./components/canvas-info-bar";
-import CommandMenu from "./components/command-menu";
+import { MousePointerClick } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import DraggableNode from './components/draggable-node';
+import Footer from './components/footer';
+import FullscreenButton from './components/fullscreen-button';
+import QuickAddMenu from './components/quick-add-menu';
+import Toolbar from './components/toolbar';
+import { configData } from './config/site-config';
+import { useNodePositions } from './hooks/use-node-positions';
+import { useQuickAdd } from './hooks/use-quick-add';
+import type { ConfigNode } from './types/config';
+
+type ConnectorStyle = 'animated' | 'gradient' | 'step' | 'dotted-marker';
 
 const defaultSettings = {
 	// Theme Settings
-	theme: "dark" as const,
-	accentColor: "#6366f1",
-	connectorColor: "#6366f1",
+	theme: 'dark' as const,
+	accentColor: '#6366f1',
+	connectorColor: '#6366f1',
 
 	// Animation Settings
 	animationSpeed: 1000,
@@ -35,35 +32,84 @@ const defaultSettings = {
 	nodeBackgroundOpacity: 1,
 
 	// Layout Settings
-	layout: "horizontal" as const,
+	layout: 'vertical' as const,
 	autoLayout: true,
 	snapToGrid: false,
 	gridSize: 20,
 
 	// Shell Settings
 	useShebang: true,
-	shebangType: "zsh" as const,
+	shebangType: 'zsh' as const,
 	defaultShebang: true,
 
 	// Export Settings
-	indentSize: 2,
+	indentSize: 4,
 	useSpaces: true,
 	addComments: true,
 	groupByType: true,
+
+	// Connector Style
+	connectorStyle: 'animated' as ConnectorStyle,
 };
 
 export default function App() {
-	const { positions, updatePosition } = useNodePositions(initialConfig);
+	const { positions, updatePosition } = useNodePositions(configData);
 	const {
 		quickAddPosition,
 		handleCanvasDoubleClick,
 		createNewNode,
 		resetQuickAdd,
 	} = useQuickAdd();
-	const [config, setConfig] = useState(initialConfig);
-	const [basePath, setBasePath] = useState("$HOME/.zsh");
-	const [shellType, setShellType] = useState<"sh" | "bash">("sh");
+	const [config, setConfig] = useState(configData);
+	const [shellType, setShellType] = useState<'sh' | 'bash'>('sh');
 	const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+	const [isZenMode, setIsZenMode] = useState(false);
+	const [isFullscreen, setIsFullscreen] = useState(false);
+
+	// Calculate total nodes and max level
+	const calculateStats = (
+		node: ConfigNode,
+		level = 0,
+	): { total: number; maxLevel: number } => {
+		if (!node) return { total: 0, maxLevel: 0 };
+
+		let total = 1; // Count current node
+		let maxLevel = level;
+
+		if (node.children) {
+			for (const child of node.children) {
+				const childStats = calculateStats(child, level + 1);
+				total += childStats.total;
+				maxLevel = Math.max(maxLevel, childStats.maxLevel);
+			}
+		}
+
+		return { total, maxLevel };
+	};
+
+	const { total: totalNodes, maxLevel } = calculateStats(config);
+
+	const toggleZenMode = useCallback(() => {
+		setIsZenMode((prev) => !prev);
+		document.documentElement.style.setProperty(
+			'--zen-transition',
+			'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+		);
+		setTimeout(() => {
+			document.documentElement.style.setProperty('--zen-transition', '');
+		}, 500);
+	}, []);
+
+	useEffect(() => {
+		const handleEsc = (e: KeyboardEvent) => {
+			if (e.key === 'Escape' && isZenMode) {
+				toggleZenMode();
+			}
+		};
+
+		window.addEventListener('keydown', handleEsc);
+		return () => window.removeEventListener('keydown', handleEsc);
+	}, [isZenMode, toggleZenMode]);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -79,10 +125,10 @@ export default function App() {
 
 	const handleClearAll = () => {
 		setConfig({
-			id: "root",
-			title: "main.sh",
-			content: "",
-			type: "main",
+			id: 'root',
+			title: 'main.sh',
+			content: '',
+			type: 'main',
 			children: [],
 		});
 	};
@@ -103,7 +149,7 @@ export default function App() {
 		setConfig(updateNodeRecursive(config));
 	};
 
-	const handleQuickAdd = (type: "injector" | "partial") => {
+	const handleQuickAdd = (type: 'injector' | 'partial') => {
 		const newNode = createNewNode(type);
 		setConfig((prev) => ({
 			...prev,
@@ -116,19 +162,18 @@ export default function App() {
 		node: ConfigNode,
 		level = 0,
 		hasParent = false,
-		parentNode: ConfigNode | undefined = undefined
+		parentNode: ConfigNode | undefined = undefined,
 	): JSX.Element[] => {
 		const nodeElements: JSX.Element[] = [];
 		const hasChildren = node.children && node.children.length > 0;
 
 		const handleNodeClick = (nodeId: string) => {
-			// Find the node position and scroll it into view
 			const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
 			if (nodeElement) {
 				nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 			}
 		};
-		
+
 		nodeElements.push(
 			<DraggableNode
 				key={node.id}
@@ -152,18 +197,97 @@ export default function App() {
 			for (const child of node.children) {
 				const startPos = positions[node.id];
 				const endPos = positions[child.id];
-				
+
 				if (startPos && endPos) {
+					const nodeHeight = 80;
+					const nodeWidth = defaultSettings.nodeWidth;
+					const startY = startPos.y + nodeHeight / 2;
+					const endY = endPos.y + nodeHeight / 2;
+					const startX = startPos.x + nodeWidth;
+					const endX = endPos.x;
+
+					const horizontalOffset = Math.abs(endX - startX) * 0.5;
+					const controlPoint1X = startX + horizontalOffset;
+					const controlPoint2X = endX - horizontalOffset;
+
+					const path = `
+						M ${startX} ${startY}
+						C ${controlPoint1X} ${startY},
+						  ${controlPoint2X} ${endY},
+						  ${endX} ${endY}
+					`;
+
 					nodeElements.push(
-						<AnimatedConnector
-							key={`${node.id}-${child.id}`}
-							start={{ x: startPos.x + 280, y: startPos.y + 40 }}
-							end={{ x: endPos.x, y: endPos.y + 40 }}
-							settings={defaultSettings}
-						/>,
+						<svg
+							key={`connector-${node.id}-${child.id}`}
+							style={{
+								position: 'absolute',
+								top: 0,
+								left: 0,
+								width: '100%',
+								height: '100%',
+								pointerEvents: 'none',
+								overflow: 'visible',
+							}}
+							role="img"
+							aria-label={`Connector from ${node.title} to ${child.title}`}
+						>
+							<title>
+								Connection between {node.title} and {child.title}
+							</title>
+							<defs>
+								<linearGradient
+									id={`gradient-${node.id}-${child.id}`}
+									gradientUnits="userSpaceOnUse"
+									x1={startX}
+									y1={startY}
+									x2={endX}
+									y2={endY}
+								>
+									<stop offset="0%" stopColor="rgba(99, 102, 241, 0.8)" />
+									<stop offset="50%" stopColor="rgba(99, 102, 241, 0.5)" />
+									<stop offset="100%" stopColor="rgba(99, 102, 241, 0.3)" />
+								</linearGradient>
+								<filter id={`glow-${node.id}-${child.id}`}>
+									<feGaussianBlur stdDeviation="2" result="coloredBlur" />
+									<feMerge>
+										<feMergeNode in="coloredBlur" />
+										<feMergeNode in="SourceGraphic" />
+									</feMerge>
+								</filter>
+								<marker
+									id={`arrowhead-${node.id}-${child.id}`}
+									markerWidth="12"
+									markerHeight="8"
+									refX="10"
+									refY="4"
+									orient="auto"
+								>
+									<path
+										d="M0,0 L12,4 L0,8"
+										fill="none"
+										stroke="rgba(99, 102, 241, 0.8)"
+										strokeWidth="1.5"
+									/>
+								</marker>
+							</defs>
+							<g filter={`url(#glow-${node.id}-${child.id})`}>
+								<path
+									d={path}
+									stroke={`url(#gradient-${node.id}-${child.id})`}
+									strokeWidth="2"
+									fill="none"
+									strokeDasharray="8,4"
+									markerEnd={`url(#arrowhead-${node.id}-${child.id})`}
+									style={{
+										animation: 'dash 1.5s linear infinite',
+									}}
+								/>
+							</g>
+						</svg>,
 					);
 				}
-				
+
 				nodeElements.push(...renderNodes(child, level + 1, true, node));
 			}
 		}
@@ -171,67 +295,80 @@ export default function App() {
 		return nodeElements;
 	};
 
+	const toggleFullscreen = () => {
+		if (!document.fullscreenElement) {
+			document.documentElement.requestFullscreen();
+			setIsFullscreen(true);
+		} else {
+			document.exitFullscreen();
+			setIsFullscreen(false);
+		}
+	};
+
+	useEffect(() => {
+		const handleFullscreenChange = () => {
+			setIsFullscreen(!!document.fullscreenElement);
+		};
+
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		return () =>
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+	}, []);
+
 	return (
-		<div className="h-screen flex flex-col">
-			<Toolbar
-				shellType={shellType}
-				onShellTypeChange={setShellType}
-				onClearAll={handleClearAll}
-			/>
-			<CommandMenu
-				isOpen={isCommandMenuOpen}
-				onClose={() => setIsCommandMenuOpen(false)}
-				onClearAll={handleClearAll}
-				onNewNode={handleQuickAdd}
-				shellType={shellType}
-				onShellTypeChange={setShellType}
-			/>
-			<div className="min-h-screen p-8 pb-20 bg-[#1A1A1A]">
-				<div className="max-w-[1200px] mx-auto">
-					<div className="flex justify-between items-center mb-8">
-						<div className="space-y-2">
-							<h1 className="text-2xl font-bold text-white">
-								ZSH Config Visual Editor
-							</h1>
-							<PathConfig basePath={basePath} onPathChange={setBasePath} />
+		<div
+			className="h-screen flex flex-col"
+			role="application"
+			aria-label="ZSH Config Builder"
+		>
+			<header>
+				<Toolbar
+					shellType={shellType}
+					onShellTypeChange={setShellType}
+					onClearAll={handleClearAll}
+				/>
+			</header>
+
+			<main className="flex-1 p-8 pb-20 bg-[#1A1A1A]">
+				<div className="h-full max-w-[1440px] mx-auto">
+					{/* Stats bar */}
+					<div className="flex items-center justify-between mb-4 text-sm text-gray-400">
+						<div className="flex items-center gap-4">
+							<span>Total Scripts: {totalNodes}</span>
+							<span>•</span>
+							<span>Max Level: {maxLevel}</span>
 						</div>
-						<button
-							type="button"
-							onClick={() => {
-								const commands = generateCommands(
-									config,
-									basePath,
-									defaultSettings,
-								);
-								navigator.clipboard.writeText(commands);
-								alert("Commands copied to clipboard!");
-							}}
-							className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-						>
-							<Download className="w-4 h-4" />
-							Generate & Copy Commands
-						</button>
+						<div className="flex items-center gap-2">
+							<MousePointerClick className="w-4 h-4" />
+							<span>Double-click to add</span>
+						</div>
 					</div>
 
-					<Introduction />
-
+					{/* Main canvas */}
 					<div
-						className="relative h-[800px] rounded-xl bg-[#1E1E1E] border border-[#333] overflow-hidden mt-8"
+						className="relative h-[calc(100vh-220px)] rounded-xl bg-[#1E1E1E] border border-[#333] overflow-hidden"
 						onDoubleClick={handleCanvasDoubleClick}
 					>
-						<CanvasInfoBar config={config} />
+						<div className="absolute top-2 right-2 z-50">
+							<FullscreenButton
+								isFullscreen={isFullscreen}
+								onClick={toggleFullscreen}
+							/>
+						</div>
+
 						{renderNodes(config)}
+
 						{quickAddPosition && (
 							<QuickAddMenu
 								position={quickAddPosition}
 								onSelect={handleQuickAdd}
-								onClose={resetQuickAdd}
 							/>
 						)}
 					</div>
 				</div>
-				<Footer />
-			</div>
+			</main>
+
+			<Footer />
 		</div>
 	);
 }

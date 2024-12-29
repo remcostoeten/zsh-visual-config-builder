@@ -7,4 +7,4 @@ export { default as Footer } from './footer';
 export { default as Introduction } from './introduction';
 export { default as PathConfig } from './path-config';
 export { default as QuickAddMenu } from './quick-add-menu';
-export { default as Toolbar } from './toolbar'; 
+export { default as Toolbar } from './toolbar';

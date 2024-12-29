@@ -1,90 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-[#1A1A1A];
-  }
+	body {
+		@apply bg-[#1A1A1A];
+	}
 
-  * {
-    /* @apply transition-property-[transform,opacity] duration-300; */
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
+	* {
+		/* @apply transition-property-[transform,opacity] duration-300; */
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	}
 
+	pre,
+	code,
+	kbd,
+	.monaco-editor {
+		font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Monaco,
+			"Courier New", monospace !important;
+	}
 
-  @layer components {
-    /* Custom scrollbar styles */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
+	.node-content {
+		font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Monaco,
+			"Courier New", monospace;
+	}
 
-    ::-webkit-scrollbar-track {
-      background: #1E1E1E;
-    }
+	@layer components {
+		/* Custom scrollbar styles */
+		::-webkit-scrollbar {
+			width: 8px;
+			height: 8px;
+		}
 
-    ::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 4px;
-    }
+		::-webkit-scrollbar-track {
+			background: #1e1e1e;
+		}
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: #444;
-    }
+		::-webkit-scrollbar-thumb {
+			background: #333;
+			border-radius: 4px;
+		}
 
-    /* Range input styling */
-    input[type="range"] {
-      @apply h-2 rounded-lg appearance-none bg-[#333] outline-none;
-    }
+		::-webkit-scrollbar-thumb:hover {
+			background: #444;
+		}
 
-    input[type="range"]::-webkit-slider-thumb {
-      @apply appearance-none w-4 h-4 rounded-full bg-indigo-600 cursor-pointer hover:bg-indigo-500 transition-colors;
-    }
+		/* Range input styling */
+		input[type="range"] {
+			@apply h-2 rounded-lg appearance-none bg-[#333] outline-none;
+		}
 
-    /* Color picker overlay */
-    .react-colorful {
-      @apply !w-[200px] shadow-xl rounded-lg border border-[#333] overflow-hidden;
-    }
+		input[type="range"]::-webkit-slider-thumb {
+			@apply appearance-none w-4 h-4 rounded-full bg-indigo-600 cursor-pointer hover:bg-indigo-500 transition-colors;
+		}
 
-    .react-colorful__saturation {
-      @apply !rounded-t-lg;
-    }
+		/* Color picker overlay */
+		.react-colorful {
+			@apply !w-[200px] shadow-xl rounded-lg border border-[#333] overflow-hidden;
+		}
 
-    .react-colorful__hue {
-      @apply !h-4 !rounded-b-lg;
-    }
+		.react-colorful__saturation {
+			@apply !rounded-t-lg;
+		}
 
-    .react-colorful__saturation-pointer,
-    .react-colorful__hue-pointer {
-      @apply !w-4 !h-4 !shadow-xl;
-    }
-  }
+		.react-colorful__hue {
+			@apply !h-4 !rounded-b-lg;
+		}
 
-  @layer utilities {
-    @keyframes dash {
-      to {
-        stroke-dashoffset: -8;
-      }
-    }
+		.react-colorful__saturation-pointer,
+		.react-colorful__hue-pointer {
+			@apply !w-4 !h-4 !shadow-xl;
+		}
+	}
 
-    .animate-dash {
-      animation: dash 1s linear infinite;
-    }
+	@layer utilities {
+		@keyframes dash {
+			to {
+				stroke-dashoffset: -12;
+			}
+		}
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+		.animate-dash {
+			animation: dash 1s linear infinite;
+		}
 
-    .animate-fadeIn {
-      animation: fadeIn 0.2s ease-out;
-    }
-  }
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-10px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.animate-fadeIn {
+			animation: fadeIn 0.2s ease-out;
+		}
+	}
 }

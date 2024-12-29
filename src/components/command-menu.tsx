@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Command, Search } from "lucide-react";
+import { Command, Search } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 interface CommandMenuProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onClearAll: () => void;
-	onNewNode: (type: "injector" | "partial") => void;
-	shellType: "sh" | "bash";
-	onShellTypeChange: (type: "sh" | "bash") => void;
+	onNewNode: (type: 'injector' | 'partial') => void;
+	shellType: 'sh' | 'bash';
+	onShellTypeChange: (type: 'sh' | 'bash') => void;
 }
 
 interface CommandItem {
@@ -21,66 +21,67 @@ interface CommandItem {
 const createCommands = (
 	shellType: string,
 	onClearAll: () => void,
-	onNewNode: (type: "injector" | "partial") => void,
-	onShellTypeChange: (type: "sh" | "bash") => void,
+	onNewNode: (type: 'injector' | 'partial') => void,
+	onShellTypeChange: (type: 'sh' | 'bash') => void,
 	onClose: () => void,
 ): CommandItem[] => [
 	{
-		id: "clear-all",
-		label: "Clear All",
+		id: 'clear-all',
+		label: 'Clear All',
 		execute: () => {
 			onClearAll();
 			onClose();
 		},
-		keywords: ["reset", "delete", "remove", "clear"],
-		shortcut: "1",
+		keywords: ['reset', 'delete', 'remove', 'clear'],
+		shortcut: '1',
 	},
 	{
-		id: "new-partial",
-		label: "New Partial",
+		id: 'new-partial',
+		label: 'New Partial',
 		execute: () => {
-			onNewNode("partial");
+			onNewNode('partial');
 			onClose();
 		},
-		keywords: ["add", "create", "script", "partial"],
-		shortcut: "2",
+		keywords: ['add', 'create', 'script', 'partial'],
+		shortcut: '2',
 	},
 	{
-		id: "new-injector",
-		label: "New Injector",
+		id: 'new-injector',
+		label: 'New Injector',
 		execute: () => {
-			onNewNode("injector");
+			onNewNode('injector');
 			onClose();
 		},
-		keywords: ["add", "create", "script", "injector"],
-		shortcut: "3",
+		keywords: ['add', 'create', 'script', 'injector'],
+		shortcut: '3',
 	},
 	{
-		id: "use-sh",
-		label: "Use Shell (.sh)",
+		id: 'use-sh',
+		label: 'Use Shell (.sh)',
 		execute: () => {
-			onShellTypeChange("sh");
+			onShellTypeChange('sh');
 			onClose();
 		},
-		keywords: ["shell", "extension", "sh", "use sh"],
-		shortcut: "4",
+		keywords: ['shell', 'extension', 'sh', 'use sh'],
+		shortcut: '4',
 	},
 	{
-		id: "use-bash",
-		label: "Use Bash (.bash)",
+		id: 'use-bash',
+		label: 'Use Bash (.bash)',
 		execute: () => {
-			onShellTypeChange("bash");
+			onShellTypeChange('bash');
 			onClose();
 		},
-		keywords: ["shell", "extension", "bash", "use bash"],
-		shortcut: "5",
+		keywords: ['shell', 'extension', 'bash', 'use bash'],
+		shortcut: '5',
 	},
 	{
-		id: "echo-shell",
-		label: "Show Current Shell",
+		id: 'echo-shell',
+		label: 'Show Current Shell',
 		execute: () => {
 			const popup = document.createElement('div');
-			popup.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+			popup.className =
+				'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
 			popup.innerHTML = `
 				<div class="bg-[#2D2D2D] rounded-lg shadow-xl border border-[#404040] p-4 max-w-[400px] w-full mx-4">
 					<div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#404040]">
@@ -102,19 +103,19 @@ const createCommands = (
 				</div>
 			`;
 			document.body.appendChild(popup);
-			
+
 			const closePopup = () => {
 				document.body.removeChild(popup);
 				onClose();
 			};
-			
+
 			popup.querySelector('button')?.addEventListener('click', closePopup);
 			popup.addEventListener('click', (e) => {
 				if (e.target === popup) closePopup();
 			});
 		},
-		keywords: ["show", "display", "type", "shell", "echo", "current"],
-		shortcut: "6",
+		keywords: ['show', 'display', 'type', 'shell', 'echo', 'current'],
+		shortcut: '6',
 	},
 ];
 
@@ -126,18 +127,25 @@ export default function CommandMenu({
 	shellType,
 	onShellTypeChange,
 }: CommandMenuProps) {
-	const [query, setQuery] = useState("");
+	const [query, setQuery] = useState('');
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
 	const commands = useMemo(
-		() => createCommands(shellType, onClearAll, onNewNode, onShellTypeChange, onClose),
-		[shellType, onClearAll, onNewNode, onShellTypeChange, onClose]
+		() =>
+			createCommands(
+				shellType,
+				onClearAll,
+				onNewNode,
+				onShellTypeChange,
+				onClose,
+			),
+		[shellType, onClearAll, onNewNode, onShellTypeChange, onClose],
 	);
 
 	const filteredCommands = commands.filter((command) => {
 		if (!query) return true;
-		const searchTerms = query.toLowerCase().split(" ");
+		const searchTerms = query.toLowerCase().split(' ');
 		return searchTerms.every(
 			(term) =>
 				command.label.toLowerCase().includes(term) ||
@@ -156,7 +164,7 @@ export default function CommandMenu({
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (!isOpen) {
-				if (e.key === "/" && !e.metaKey && !e.ctrlKey) {
+				if (e.key === '/' && !e.metaKey && !e.ctrlKey) {
 					e.preventDefault();
 					onClose();
 				}
@@ -174,20 +182,20 @@ export default function CommandMenu({
 			}
 
 			switch (e.key) {
-				case "Escape":
+				case 'Escape':
 					onClose();
 					break;
-				case "ArrowDown":
+				case 'ArrowDown':
 					e.preventDefault();
 					setSelectedIndex((i) => (i + 1) % filteredCommands.length);
 					break;
-				case "ArrowUp":
+				case 'ArrowUp':
 					e.preventDefault();
 					setSelectedIndex(
 						(i) => (i - 1 + filteredCommands.length) % filteredCommands.length,
 					);
 					break;
-				case "Enter":
+				case 'Enter':
 					if (filteredCommands[selectedIndex]) {
 						filteredCommands[selectedIndex].execute();
 					}
@@ -195,8 +203,8 @@ export default function CommandMenu({
 			}
 		};
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
 	}, [isOpen, filteredCommands, selectedIndex, onClose, commands]);
 
 	if (!isOpen) return null;
@@ -227,7 +235,7 @@ export default function CommandMenu({
 							onClick={() => command.execute()}
 							onMouseEnter={() => setSelectedIndex(index)}
 							className={`w-full text-left px-4 py-2 hover:bg-[#2D2D2D] flex items-center justify-between
-                ${index === selectedIndex ? "bg-[#2D2D2D]" : ""}`}
+                ${index === selectedIndex ? 'bg-[#2D2D2D]' : ''}`}
 						>
 							<span className="text-white">{command.label}</span>
 							{command.shortcut && (

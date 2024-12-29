@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--zen-transition: "";
+}
+
+.zen-mode {
+	@apply fixed inset-0 z-50 bg-[#1A1A1A];
+}
+
+.zen-mode * {
+	transition: var(--zen-transition);
+}
+
+/* Smooth fade for elements that are hidden in zen mode */
+.zen-mode .opacity-0 {
+	transition: opacity 0.3s ease-in-out;
+}
+
+/* Scale animation for the main editor when entering/exiting zen mode */
+.zen-mode .relative {
+	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Micro-interactions for buttons */
+button {
+	transform: scale(1);
+	transition: all 0.2s ease;
+	line-height: 0; /* Ensures perfect centering of icons */
+}
+
+button:active {
+	transform: scale(0.92);
+}
+
+/* Fullscreen button animations */
+button svg {
+	transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover svg {
+	transform: scale(1.1);
+}
+
+.backdrop-blur-sm {
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+/* Fullscreen transitions */
+:fullscreen .relative {
+	@apply rounded-none border-0;
+	height: 100vh !important;
+	width: 100vw !important;
+}
+
+/* Corner buttons alignment */
+.absolute.top-2.right-2 button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	min-height: 24px;
+}

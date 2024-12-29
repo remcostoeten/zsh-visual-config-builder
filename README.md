@@ -1,4 +1,5 @@
 # ZSH Config Builder
+
 <small>Readme mostly AI generated so have to edit someday</small>
 
 A visual editor for creating and managing modular ZSH/Bash configurations. Split your monolithic `.zshrc` into maintainable, focused modules with a beautiful drag-and-drop interface.

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zsh-config-builder.remcostoeten.com/sitemap.xml 
