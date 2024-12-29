@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#1A1A1A];
+  }
+
+  * {
+    /* @apply transition-property-[transform,opacity] duration-300; */
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+
+  @layer components {
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1E1E1E;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    /* Range input styling */
+    input[type="range"] {
+      @apply h-2 rounded-lg appearance-none bg-[#333] outline-none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      @apply appearance-none w-4 h-4 rounded-full bg-indigo-600 cursor-pointer hover:bg-indigo-500 transition-colors;
+    }
+
+    /* Color picker overlay */
+    .react-colorful {
+      @apply !w-[200px] shadow-xl rounded-lg border border-[#333] overflow-hidden;
+    }
+
+    .react-colorful__saturation {
+      @apply !rounded-t-lg;
+    }
+
+    .react-colorful__hue {
+      @apply !h-4 !rounded-b-lg;
+    }
+
+    .react-colorful__saturation-pointer,
+    .react-colorful__hue-pointer {
+      @apply !w-4 !h-4 !shadow-xl;
+    }
+  }
+
+  @layer utilities {
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -8;
+      }
+    }
+
+    .animate-dash {
+      animation: dash 1s linear infinite;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.2s ease-out;
+    }
+  }
+}
