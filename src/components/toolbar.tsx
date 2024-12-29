@@ -1,6 +1,6 @@
 import { Terminal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog from './confirm-dialog';
 
 interface ToolbarProps {
 	shellType: 'sh' | 'bash';

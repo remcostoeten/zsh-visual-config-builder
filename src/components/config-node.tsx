@@ -2,7 +2,7 @@ import { Edit2, File } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
 import type { ConfigNode as ConfigNodeType } from '../types/config';
-import MonacoEditor from './MonacoEditor';
+import MonacoEditor from './monaco-editor';
 
 interface Props {
 	node: ConfigNodeType;
