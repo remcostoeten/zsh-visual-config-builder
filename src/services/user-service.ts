@@ -1,11 +1,9 @@
-import { db } from "@/server/db";
-import { users } from "@/server/db/schema";
-import { eq } from "drizzle-orm";
-
 export async function findUserByGithubId(githubId: string) {
-	return db.query.users.findFirst({
-		where: eq(users.githubId, githubId),
-	});
+	const response = await fetch(`/api/user?githubId=${githubId}`);
+	if (!response.ok) {
+		throw new Error('Failed to fetch user');
+	}
+	return response.json();
 }
 
 export async function createUser(userData: {
@@ -14,15 +12,29 @@ export async function createUser(userData: {
 	email: string;
 	avatarUrl?: string;
 }) {
-	const [newUser] = await db.insert(users).values(userData).returning();
-	return newUser;
+	const response = await fetch('/api/user', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(userData),
+	});
+	if (!response.ok) {
+		throw new Error('Failed to create user');
+	}
+	return response.json();
 }
 
 export async function updateUserRole(userId: string, role: string) {
-	const [updatedUser] = await db
-		.update(users)
-		.set({ role })
-		.where(eq(users.id, Number.parseInt(userId, 10)))
-		.returning();
-	return updatedUser;
+	const response = await fetch(`/api/user?userId=${userId}`, {
+		method: 'PATCH',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ role }),
+	});
+	if (!response.ok) {
+		throw new Error('Failed to update user role');
+	}
+	return response.json();
 }

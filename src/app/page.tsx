@@ -1,20 +1,29 @@
-import { AuthButton } from "@/features/auth/components/auth-button";
-import Image from "next/image";
+import { AuthForm } from "@/features/auth/components/auth-form";
+import { getUser } from "@/services/auth-service";
 
-export default function Home() {
+export default async function HomePage() {
+	const user = await getUser();
+
 	return (
-		<div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-			<AuthButton isLoggedIn={false} />
-			<main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-				<Image
-					className="dark:invert"
-					src="/next.svg"
-					alt="Next.js Logo"
-					width={180}
-					height={37}
-					priority
-				/>
-			</main>
-		</div>
+		<main className="flex min-h-screen flex-col items-center justify-center p-4">
+			<div className="space-y-6 text-center">
+				<h1 className="text-4xl font-bold tracking-tight">ZSH Config Builder</h1>
+				<p className="text-muted-foreground">
+					Build your ZSH configuration visually. Login to get started.
+				</p>
+			</div>
+			{!user ? (
+				<div className="mt-8">
+					<AuthForm />
+				</div>
+			) : (
+				<div className="mt-8 space-y-4">
+					<p className="text-xl">Welcome back, {user.login}!</p>
+					<p className="text-muted-foreground">
+						Start building your ZSH configuration.
+					</p>
+				</div>
+			)}
+		</main>
 	);
 }

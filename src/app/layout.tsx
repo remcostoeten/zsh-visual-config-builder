@@ -1,28 +1,33 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "@/components/theme-provider";
-import { AuthWrapper } from "@/features/auth/components/auth-wrapper";
-import { geistSans, geistMono } from "@/core/fonts";
-import { metadata } from "@/core/config/metadata";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 
-export { metadata };
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+	title: "ZSH Config Builder",
+	description: "Build your ZSH configuration visually",
+};
 
 export default function RootLayout({
 	children,
-}: Readonly<{
+}: {
 	children: React.ReactNode;
-}>) {
+}) {
 	return (
 		<html lang="en">
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-			>
-				<AppProvider>
-					<header className="flex justify-between items-center p-4 border-b">
-						<h1 className="text-xl font-bold">ZSH Config Builder</h1>
-						<AuthWrapper />
-					</header>
+			<body className={inter.className}>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
 					{children}
-				</AppProvider>
+					<Toaster position="top-center" />
+				</ThemeProvider>
 			</body>
 		</html>
 	);

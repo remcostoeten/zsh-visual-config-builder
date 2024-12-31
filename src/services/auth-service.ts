@@ -7,6 +7,7 @@ import type { GithubUser } from "@/features/auth/types";
 import { db } from "@/server/db";
 import { sessions } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
+import { User } from "@/server/db/schema";
 
 const GITHUB_CLIENT_ID = env.GITHUB_CLIENT_ID;
 
@@ -68,5 +69,76 @@ export async function logout(): Promise<void> {
 	if (sessionId) {
 		await db.delete(sessions).where(eq(sessions.id, sessionId));
 		await cookieStore.delete("sessionId");
+	}
+}
+
+interface RegisterData {
+	email: string;
+	password: string;
+	name: string;
+}
+
+interface LoginData {
+	email: string;
+	password: string;
+}
+
+export async function register(data: RegisterData): Promise<User> {
+	const response = await fetch('/api/auth/register', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(data),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || 'Failed to register');
+	}
+
+	return response.json();
+}
+
+export async function login(data: LoginData): Promise<User> {
+	const response = await fetch('/api/auth/login', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(data),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || 'Failed to login');
+	}
+
+	return response.json();
+}
+
+export async function resetPassword(email: string): Promise<void> {
+	const response = await fetch('/api/auth/reset-password', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ email }),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || 'Failed to request password reset');
+	}
+}
+
+export async function verifyEmail(token: string): Promise<void> {
+	const response = await fetch(`/api/auth/verify-email?token=${token}`, {
+		method: 'POST',
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || 'Failed to verify email');
 	}
 }

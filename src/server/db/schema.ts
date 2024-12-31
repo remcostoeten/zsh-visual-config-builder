@@ -4,11 +4,16 @@ import { relations } from "drizzle-orm";
 
 export const users = sqliteTable("users", {
 	id: integer("id").primaryKey(),
-	githubId: text("github_id").notNull().unique(),
-	email: text("email").notNull(),
-	name: text("name"),
+	githubId: text("github_id").unique(),
+	email: text("email").notNull().unique(),
+	password: text("password"),
+	name: text("name").notNull(),
 	avatarUrl: text("avatar_url"),
 	role: text("role").default("user").notNull(),
+	emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
+	verificationToken: text("verification_token"),
+	resetPasswordToken: text("reset_password_token"),
+	resetPasswordExpires: integer("reset_password_expires"),
 	createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
