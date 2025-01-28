@@ -14,6 +14,14 @@ export function SettingsPanel() {
   const { settings, updateSettings, rotateArtboard, resetRotation, toggleArtboardLock } = useCanvas();
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const handleBackgroundColorChange = (color: string) => {
+    updateSettings({
+      background: {
+        color
+      }
+    });
+  };
+
   return (
     <div className="absolute top-4 right-4 z-50">
       <motion.button
@@ -217,6 +225,25 @@ export function SettingsPanel() {
 
                     <div>
                       <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1">
+                        Pattern Opacity
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={parseInt((settings.pattern.opacity || 0.5) * 100)}
+                        onChange={(e) => updateSettings({
+                          pattern: { 
+                            ...settings.pattern, 
+                            opacity: parseInt(e.target.value) / 100 
+                          }
+                        })}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1">
                         Grid Size: {settings.pattern.tileSize}px
                       </label>
                       <input
@@ -251,6 +278,28 @@ export function SettingsPanel() {
                     )}
                   </>
                 )}
+              </div>
+            </div>
+
+            {/* Background Color */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Background Color
+              </label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={settings.background.color}
+                  onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={settings.background.color}
+                  onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                  className="flex-1 px-2 py-1 text-sm bg-gray-100 dark:bg-[#2A2A2A] rounded border 
+                           border-gray-200 dark:border-[#3A3A3A] text-gray-900 dark:text-white"
+                />
               </div>
             </div>
           </motion.div>

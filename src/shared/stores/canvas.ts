@@ -1,6 +1,22 @@
 import { create } from 'zustand';
-import { storage } from '../services/storage';
+import { storageService } from '../services/storage.service';
 import type { Point, DraggableItem, CanvasSettings } from '../types/canvas';
+
+interface PatternSettings {
+  type: 'dots' | 'grid' | 'tiles' | 'none';
+  color: string;
+  size: number;      // tileSize
+  thickness: number; // dotSize/strokeWidth
+  opacity: number;
+}
+
+interface CanvasSettings {
+  pattern: PatternSettings;
+  background: {
+    color: string;
+  };
+  // ... other settings
+}
 
 type CanvasStore = {
   items: DraggableItem[];
@@ -29,10 +45,14 @@ const DEFAULT_SETTINGS: CanvasSettings = {
     rotation: 0,
   },
   pattern: {
-    type: 'dots',
-    color: '#4B5563',
-    tileSize: 20,
-    dotSize: 1,
+    type: 'grid',
+    color: '#E5E7EB',
+    size: 20,
+    thickness: 1,
+    opacity: 0.5
+  },
+  background: {
+    color: '#f9fafb', // light gray default
   },
   connectors: {
     type: 'bezier',
@@ -43,7 +63,7 @@ const DEFAULT_SETTINGS: CanvasSettings = {
 };
 
 export const useCanvas = create<CanvasStore>((set) => ({
-  items: storage.getCanvasItems(),
+  items: storageService.getCanvasItems(),
   scale: 1,
   position: { x: 0, y: 0 },
   isDragging: false,
@@ -54,14 +74,14 @@ export const useCanvas = create<CanvasStore>((set) => ({
   addItem: (item: DraggableItem) =>
     set(state => {
       const newItems = [...state.items, item];
-      storage.setCanvasItems(newItems);
+      storageService.setCanvasItems(newItems);
       return { items: newItems, showEmptyState: false };
     }),
     
   removeItem: (id: string) =>
     set(state => {
       const newItems = state.items.filter(item => item.id !== id);
-      storage.setCanvasItems(newItems);
+      storageService.setCanvasItems(newItems);
       return { items: newItems, showEmptyState: newItems.length === 0 };
     }),
     
@@ -98,6 +118,10 @@ export const useCanvas = create<CanvasStore>((set) => ({
         pattern: {
           ...state.settings.pattern,
           ...(newSettings.pattern || {}),
+        },
+        background: {
+          ...state.settings.background,
+          ...(newSettings.background || {}),
         },
         connectors: {
           ...state.settings.connectors,

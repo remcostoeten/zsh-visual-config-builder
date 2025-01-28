@@ -4,18 +4,22 @@ export interface Point {
 }
 
 export interface CanvasSettings {
+  pattern: {
+    type: 'dots' | 'grid' | 'tiles' | 'none';
+    color: string;
+    size: number;
+    thickness: number;
+    opacity: number;
+  };
+  background: {
+    color: string;
+  };
   artboard: {
     locked: boolean;
     rotation: number;
   };
-  pattern: {
-    type: 'dots' | 'grid' | 'tiles' | 'none';
-    color: string;
-    tileSize: number;
-    dotSize: number;
-  };
   connectors: {
-    type: 'bezier' | 'orthogonal';
+    type: 'bezier' | 'straight';
     color: string;
     thickness: number;
     animate: boolean;

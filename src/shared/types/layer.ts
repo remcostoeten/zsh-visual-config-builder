@@ -3,7 +3,14 @@ import type { Point } from './canvas';
 export interface Layer {
   id: string;
   name: string;
-  type: 'circle' | 'square' | 'arrow' | 'scribble' | 'zshrc' | 'main' | 'aliases' | 'git-aliases' | 'dev-aliases' | 'functions';
+  type: 
+    | 'shell_config'    // .zshrc, .bashrc, .bash_profile
+    | 'main_injector'   // main entry point
+    | 'env_injector'    // environment variables
+    | 'alias_injector'  // alias definitions
+    | 'path_injector'   // PATH modifications
+    | 'function_injector' // shell functions
+    | 'custom_injector'; // user-defined injectors
   visible: boolean;
   selected: boolean;
   component: React.ReactNode;
@@ -21,6 +28,11 @@ export interface Layer {
     opacity: number;
     rotation: number;
   };
+  // New fields for shell configuration
+  shellType?: 'zsh' | 'bash';
+  sourceOrder?: number;
+  validated?: boolean;
+  validationErrors?: string[];
 }
 
 export interface LayerStore {
@@ -37,4 +49,6 @@ export interface LayerStore {
   selectLayer: (id: string) => void;
   setHoveredLayer: (id: string | null) => void;
   setLayerParent: (childId: string, parentId: string | undefined) => void;
+  updateLayerId: (oldId: string, newId: string) => void;
+  clearLayers: () => void;
 }

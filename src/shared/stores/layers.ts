@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import type { Layer, LayerStore } from '../types/layer';
+import { storage } from '../services/storage';
 
 export const useLayers = create<LayerStore>((set) => ({
-  layers: [],
+  layers: storage.getCanvasState(),
   hoveredLayer: null,
 
   addLayer: (layer) =>
-    set((state) => ({
-      layers: [...state.layers, {
+    set((state) => {
+      const newLayers = [...state.layers, {
         ...layer,
         size: { width: 48, height: 48 },
         style: {
@@ -16,86 +17,112 @@ export const useLayers = create<LayerStore>((set) => ({
           rotation: 0,
           ...layer.style
         }
-      }],
-    })),
+      }];
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
+
+  clearLayers: () =>
+    set(() => {
+      storage.clearCanvasState();
+      return { layers: [] };
+    }),
 
   removeLayer: (id) =>
-    set((state) => ({
-      layers: state.layers.filter((layer) => layer.id !== id),
-    })),
+    set((state) => {
+      const newLayers = state.layers.filter((layer) => layer.id !== id);
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 
   toggleVisibility: (id) =>
-    set((state) => ({
-      layers: state.layers.map((layer) =>
+    set((state) => {
+      const newLayers = state.layers.map((layer) =>
         layer.id === id ? { ...layer, visible: !layer.visible } : layer
-      ),
-    })),
+      );
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 
   updateLayerName: (id, name) =>
-    set((state) => ({
-      layers: state.layers.map((layer) =>
+    set((state) => {
+      const newLayers = state.layers.map((layer) =>
         layer.id === id ? { ...layer, name } : layer
-      ),
-    })),
+      );
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 
   updateLayerStyle: (id, style) =>
-    set((state) => ({
-      layers: state.layers.map((layer) =>
+    set((state) => {
+      const newLayers = state.layers.map((layer) =>
         layer.id === id ? {
           ...layer,
           style: { ...layer.style, ...style }
         } : layer
-      ),
-    })),
+      );
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 
   updateLayerPosition: (id, position) =>
-    set((state) => ({
-      layers: state.layers.map((layer) =>
+    set((state) => {
+      const newLayers = state.layers.map((layer) =>
         layer.id === id ? { ...layer, position } : layer
-      ),
-    })),
+      );
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 
   updateLayerSize: (id, size) =>
-    set((state) => ({
-      layers: state.layers.map((layer) =>
-        layer.id === id ? { ...layer, size } : layer
-      ),
-    })),
-
-  updateLayerId: (oldId, newId) =>
     set((state) => {
-      // Update the layer's ID
-      const updatedLayers = state.layers.map((layer) => {
+      const newLayers = state.layers.map((layer) =>
+        layer.id === id ? { ...layer, size } : layer
+      );
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
+
+  updateLayerId: (oldId: string, newId: string) =>
+    set((state) => {
+      const newLayers = state.layers.map((layer) => {
         if (layer.id === oldId) {
           return { ...layer, id: newId };
         }
-        // Update any parent references
         if (layer.parent === oldId) {
           return { ...layer, parent: newId };
         }
         return layer;
       });
-      return { layers: updatedLayers };
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
     }),
 
   reorderLayers: (layers) =>
-    set({ layers }),
+    set(() => {
+      storage.saveCanvasState(layers);
+      return { layers };
+    }),
 
   selectLayer: (id) =>
-    set((state) => ({
-      layers: state.layers.map((layer) => ({
+    set((state) => {
+      const newLayers = state.layers.map((layer) => ({
         ...layer,
         selected: layer.id === id,
-      })),
-    })),
+      }));
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 
   setHoveredLayer: (id) =>
     set({ hoveredLayer: id }),
 
   setLayerParent: (childId, parentId) =>
-    set((state) => ({
-      layers: state.layers.map((layer) =>
+    set((state) => {
+      const newLayers = state.layers.map((layer) =>
         layer.id === childId ? { ...layer, parent: parentId } : layer
-      ),
-    })),
+      );
+      storage.saveCanvasState(newLayers);
+      return { layers: newLayers };
+    }),
 }));

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { storage } from '../services/storage';
+import { storageService } from '../services/storage.service';
 
 type FavoritesStore = {
   favorites: string[];
@@ -9,19 +9,19 @@ type FavoritesStore = {
 };
 
 export const useFavorites = create<FavoritesStore>((set, get) => ({
-  favorites: storage.getFavorites(),
+  favorites: storageService.getFavorites(),
   
   addFavorite: (id: string) => 
     set(state => {
       const newFavorites = [...state.favorites, id];
-      storage.setFavorites(newFavorites);
+      storageService.setFavorites(newFavorites);
       return { favorites: newFavorites };
     }),
     
   removeFavorite: (id: string) => 
     set(state => {
       const newFavorites = state.favorites.filter(fav => fav !== id);
-      storage.setFavorites(newFavorites);
+      storageService.setFavorites(newFavorites);
       return { favorites: newFavorites };
     }),
     

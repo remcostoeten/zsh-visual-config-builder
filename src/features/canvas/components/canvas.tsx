@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ZoomIn, ZoomOut, Grid as GridIcon, Circle, Trash, ArrowBendDoubleUpRight, Square, Scribble, Terminal, ArrowRight, FileCode, Command } from '../../../shared/components/icons';
+import { MagnifyingGlassPlus, MagnifyingGlassMinus, FileCode, Terminal, Command } from '@phosphor-icons/react';
 import { FlowNode } from './flow-node';
 import { Tooltip } from '../../../shared/components/tooltip';
 import { useCanvas } from '../../../shared/stores/canvas';
@@ -8,25 +8,42 @@ import { useLayers } from '../../../shared/stores/layers';
 import { SettingsPanel } from '../../settings/components/settings-panel';
 import { LayerEditor } from './layer-editor';
 import { NodeEditor } from './node-editor';
-import { Ruler } from './ruler';
 import { ConnectorGroup } from '../../../shared/components/connectors';
-import { v4 as uuidv4 } from 'uuid';
 import type { Connector, Point } from '../../../shared/types/canvas';
-import type { Layer } from '../../../shared/types/layer';
+
+type LayerType = 'shell_config' | 'main_injector' | 'env_injector' | 'alias_injector' | 'path_injector' | 'function_injector' | 'custom_injector';
+
+interface LayerStyle {
+  color?: string;
+  opacity?: number;
+  rotation?: number;
+  [key: string]: string | number | undefined;
+}
+
+interface Layer {
+  id: string;
+  type: LayerType;
+  name: string;
+  parent?: string;
+  metadata?: string;
+  shellType?: 'zsh' | 'bash';
+  sourceOrder?: number;
+  validated?: boolean;
+  validationErrors?: string[];
+  code?: string;
+  style?: LayerStyle;
+  visible?: boolean;
+}
 
 const createLayerComponents = (layers: Layer[]) => {
   const components = {
-    'circle': () => <Circle className="w-full h-full text-gray-600 dark:text-gray-400" weight="duotone" />,
-    'square': () => <Square className="w-full h-full text-gray-600 dark:text-gray-400" weight="duotone" />,
-    'arrow': () => <ArrowRight className="w-full h-full text-gray-600 dark:text-gray-400" weight="duotone" />,
-    'scribble': () => <Scribble className="w-full h-full text-gray-600 dark:text-gray-400" weight="duotone" />,
-    'zshrc': (layer: Layer) => (
+    'shell_config': (layer: Layer) => (
       <FlowNode
         id={layer.id}
         parent={layer.parent}
         icon={<FileCode className="w-6 h-6" weight="duotone" />}
         label={layer.name}
-        metadata={layer.metadata}
+        metadata={layer.shellType || 'zsh'}
         fill={layer.style?.color}
         allNodes={layers.map(l => ({
           id: l.id,
@@ -34,19 +51,19 @@ const createLayerComponents = (layers: Layer[]) => {
           label: l.name
         }))}
         code={layer.code || ''}
-        language={layer.language || 'bash'}
+        language="shell"
         variant="highlight"
         color="blue"
         shape="rectangle"
       />
     ),
-    'main': (layer: Layer) => (
+    'main_injector': (layer: Layer) => (
       <FlowNode
         id={layer.id}
         parent={layer.parent}
         icon={<Terminal className="w-6 h-6" weight="duotone" />}
         label={layer.name}
-        metadata={layer.metadata}
+        metadata="Main Configuration"
         fill={layer.style?.color}
         allNodes={layers.map(l => ({
           id: l.id,
@@ -54,19 +71,19 @@ const createLayerComponents = (layers: Layer[]) => {
           label: l.name
         }))}
         code={layer.code || ''}
-        language={layer.language || 'bash'}
+        language="shell"
         variant="highlight"
         color="purple"
         shape="rectangle"
       />
     ),
-    'aliases': (layer: Layer) => (
+    'env_injector': (layer: Layer) => (
       <FlowNode
         id={layer.id}
         parent={layer.parent}
         icon={<Command className="w-6 h-6" weight="duotone" />}
         label={layer.name}
-        metadata={layer.metadata}
+        metadata="Environment Variables"
         fill={layer.style?.color}
         allNodes={layers.map(l => ({
           id: l.id,
@@ -74,19 +91,19 @@ const createLayerComponents = (layers: Layer[]) => {
           label: l.name
         }))}
         code={layer.code || ''}
-        language={layer.language || 'bash'}
+        language="shell"
         variant="highlight"
         color="green"
         shape="rectangle"
       />
     ),
-    'git-aliases': (layer: Layer) => (
+    'alias_injector': (layer: Layer) => (
       <FlowNode
         id={layer.id}
         parent={layer.parent}
         icon={<Command className="w-6 h-6" weight="duotone" />}
         label={layer.name}
-        metadata={layer.metadata}
+        metadata="Alias Definitions"
         fill={layer.style?.color}
         allNodes={layers.map(l => ({
           id: l.id,
@@ -94,19 +111,19 @@ const createLayerComponents = (layers: Layer[]) => {
           label: l.name
         }))}
         code={layer.code || ''}
-        language={layer.language || 'bash'}
+        language="shell"
         variant="highlight"
         color="orange"
         shape="rectangle"
       />
     ),
-    'dev-aliases': (layer: Layer) => (
+    'path_injector': (layer: Layer) => (
       <FlowNode
         id={layer.id}
         parent={layer.parent}
         icon={<Command className="w-6 h-6" weight="duotone" />}
         label={layer.name}
-        metadata={layer.metadata}
+        metadata="PATH Modifications"
         fill={layer.style?.color}
         allNodes={layers.map(l => ({
           id: l.id,
@@ -114,19 +131,19 @@ const createLayerComponents = (layers: Layer[]) => {
           label: l.name
         }))}
         code={layer.code || ''}
-        language={layer.language || 'bash'}
+        language="shell"
         variant="highlight"
         color="yellow"
         shape="rectangle"
       />
     ),
-    'functions': (layer: Layer) => (
+    'function_injector': (layer: Layer) => (
       <FlowNode
         id={layer.id}
         parent={layer.parent}
         icon={<Terminal className="w-6 h-6" weight="duotone" />}
         label={layer.name}
-        metadata={layer.metadata}
+        metadata="Shell Functions"
         fill={layer.style?.color}
         allNodes={layers.map(l => ({
           id: l.id,
@@ -134,9 +151,29 @@ const createLayerComponents = (layers: Layer[]) => {
           label: l.name
         }))}
         code={layer.code || ''}
-        language={layer.language || 'bash'}
+        language="shell"
         variant="highlight"
         color="red"
+        shape="rectangle"
+      />
+    ),
+    'custom_injector': (layer: Layer) => (
+      <FlowNode
+        id={layer.id}
+        parent={layer.parent}
+        icon={<Terminal className="w-6 h-6" weight="duotone" />}
+        label={layer.name}
+        metadata={layer.metadata || 'Custom Injector'}
+        fill={layer.style?.color}
+        allNodes={layers.map(l => ({
+          id: l.id,
+          parent: l.parent,
+          label: l.name
+        }))}
+        code={layer.code || ''}
+        language="shell"
+        variant="highlight"
+        color="blue"
         shape="rectangle"
       />
     ),
@@ -151,31 +188,59 @@ const MIN_SCALE = 0.1;
 const MAX_SCALE = 3;
 const SCALE_STEP = 0.1;
 
-const BackgroundPattern = React.memo(({ type, color, tileSize, dotSize }: {
+const BackgroundPattern = React.memo(({ type, color, tileSize, dotSize, opacity }: {
   type: 'dots' | 'grid' | 'tiles' | 'none';
   color: string;
   tileSize: number;
   dotSize: number;
+  opacity: number;
 }) => {
-  if (type === 'none') return null;
-  
   const patternId = useMemo(() => `pattern-${type}-${tileSize}-${dotSize}`, [type, tileSize, dotSize]);
 
   const patternContent = useMemo(() => {
-    if (type === 'dots') {
-      return <circle cx={tileSize/2} cy={tileSize/2} r={dotSize} fill={color} />;
+    switch (type) {
+      case 'dots':
+        return (
+          <circle 
+            cx={tileSize/2} 
+            cy={tileSize/2} 
+            r={dotSize/2} 
+            fill={color} 
+          />
+        );
+      case 'grid':
+        return (
+          <path 
+            d={`M ${tileSize} 0 L 0 0 0 ${tileSize}`} 
+            stroke={color} 
+            strokeWidth={dotSize} 
+            fill="none" 
+          />
+        );
+      case 'tiles':
+        return (
+          <rect 
+            x="0" 
+            y="0" 
+            width={tileSize} 
+            height={tileSize} 
+            fill="none" 
+            stroke={color} 
+            strokeWidth={dotSize} 
+          />
+        );
+      default:
+        return null;
     }
-    if (type === 'grid') {
-      return <path d={`M ${tileSize} 0 L 0 0 0 ${tileSize}`} stroke={color} strokeWidth="1" fill="none" />;
-    }
-    if (type === 'tiles') {
-      return <rect x="0" y="0" width={tileSize} height={tileSize} fill="none" stroke={color} strokeWidth="1" />;
-    }
-    return null;
   }, [type, color, tileSize, dotSize]);
   
+  if (type === 'none') return null;
+  
   return (
-    <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-50" style={{ zIndex: 0 }}>
+    <svg 
+      className="absolute inset-0 w-full h-full pointer-events-none" 
+      style={{ opacity }}
+    >
       <defs>
         <pattern 
           id={patternId} 
@@ -193,6 +258,8 @@ const BackgroundPattern = React.memo(({ type, color, tileSize, dotSize }: {
   );
 });
 
+BackgroundPattern.displayName = 'BackgroundPattern';
+
 export function Canvas() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [editorState, setEditorState] = useState<{ layerId: string; position: Point } | null>(null);
@@ -208,7 +275,6 @@ export function Canvas() {
   const {
     scale,
     position,
-    isDragging,
     settings,
     updateScale,
     updatePosition,
@@ -264,13 +330,54 @@ export function Canvas() {
     return baseConnectors;
   }, [layers, settings.connectors.type, draggedLayer]);
 
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const delta = e.deltaY;
+    const zoomFactor = delta > 0 ? 0.9 : 1.1; // Smoother zoom
+    
+    const newScale = Math.max(
+      MIN_SCALE,
+      Math.min(MAX_SCALE, scale * zoomFactor)
+    );
+
+    // Get mouse position relative to canvas
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Calculate new position to zoom towards mouse
+    const newPosition = {
+      x: mouseX - (mouseX - position.x) * (newScale / scale),
+      y: mouseY - (mouseY - position.y) * (newScale / scale)
+    };
+
+    updateScale(newScale);
+    updatePosition(newPosition);
+  }, [scale, position, updateScale, updatePosition]);
+
+  // Update the wheel event listener
+  useEffect(() => {
+    const element = canvasRef.current;
+    if (!element) return;
+
+    element.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      element.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
+
   // Handle canvas panning
   useEffect(() => {
     if (!canvasRef.current) return;
-    let lastPosition = { x: 0, y: 0 };
+    
     let isPanning = false;
+    let lastPosition = { x: 0, y: 0 };
 
-    // Handle space key for temporary pan mode
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !spacePressed) {
         setSpacePressed(true);
@@ -292,18 +399,17 @@ export function Canvas() {
     const handleMouseDown = (e: MouseEvent) => {
       // Start panning with space + left click, middle mouse button, or Alt + left click
       if ((spacePressed && e.button === 0) || e.button === 1 || (e.altKey && e.button === 0)) {
+        e.preventDefault();
         isPanning = true;
         setDragging(true);
         lastPosition = { x: e.clientX, y: e.clientY };
         if (canvasRef.current) {
           canvasRef.current.style.cursor = 'grabbing';
         }
-        e.preventDefault();
       }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Handle panning
       if (!isPanning) return;
       
       if (settings.artboard.locked) return;
@@ -327,35 +433,19 @@ export function Canvas() {
       }
     };
 
-    const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = -e.deltaY;
-        const scaleChange = delta > 0 ? SCALE_STEP : -SCALE_STEP;
-        const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale + scaleChange));
-        updateScale(newScale);
-      }
-    };
-
     const element = canvasRef.current;
     element.addEventListener('mousedown', handleMouseDown);
     element.addEventListener('mousemove', handleMouseMove);
     element.addEventListener('mouseup', handleMouseUp);
     element.addEventListener('mouseleave', handleMouseUp);
-    element.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
 
     return () => {
       element.removeEventListener('mousedown', handleMouseDown);
       element.removeEventListener('mousemove', handleMouseMove);
       element.removeEventListener('mouseup', handleMouseUp);
       element.removeEventListener('mouseleave', handleMouseUp);
-      element.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [position, scale, spacePressed]);
+  }, [spacePressed, position, settings.artboard.locked, updatePosition, setDragging, scale, updateScale]);
 
   // Handle layer dragging
   const handleLayerMouseDown = useCallback((e: React.MouseEvent, layerId: string) => {
@@ -442,12 +532,31 @@ export function Canvas() {
     setStartLayerSize(null);
   }, []);
 
+  const handleLayerClick = (layer: Layer) => {
+    if (layer.type === 'shell_config' || layer.type === 'main_injector' || layer.type === 'function_injector') {
+      setSelectedNodeId(layer.id);
+    }
+  };
+
+  const handleZoomIn = useCallback(() => {
+    const newScale = Math.min(MAX_SCALE, scale + SCALE_STEP);
+    updateScale(newScale);
+  }, [scale, updateScale]);
+
+  const handleZoomOut = useCallback(() => {
+    const newScale = Math.max(MIN_SCALE, scale - SCALE_STEP);
+    updateScale(newScale);
+  }, [scale, updateScale]);
+
   return (
     <div 
       ref={canvasRef}
-      className={`relative flex-1 overflow-hidden bg-gray-50 dark:bg-[#2A2A2A] canvas-container select-none ${
+      className={`relative flex-1 overflow-hidden canvas-container select-none ${
         settings.artboard.locked ? 'cursor-not-allowed' : ''
       }`}
+      style={{
+        backgroundColor: settings.background.color
+      }}
       onMouseMove={handleResizeMove}
       onMouseUp={handleResizeEnd}
       onMouseLeave={() => {
@@ -458,8 +567,9 @@ export function Canvas() {
       <BackgroundPattern 
         type={settings.pattern.type}
         color={settings.pattern.color}
-        tileSize={settings.pattern.tileSize}
-        dotSize={settings.pattern.dotSize}
+        tileSize={settings.pattern.size}
+        dotSize={settings.pattern.thickness}
+        opacity={settings.pattern.opacity}
       />
 
       <SettingsPanel />
@@ -468,8 +578,8 @@ export function Canvas() {
       <div 
         className="absolute inset-0 z-10"
         style={{
-          transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-          transformOrigin: '0 0'
+          transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${settings.artboard.rotation}deg)`,
+          transformOrigin: 'center center'
         }}
         onMouseMove={handleLayerMouseMove}
         onMouseUp={handleLayerMouseUp}
@@ -484,32 +594,60 @@ export function Canvas() {
               className={`absolute ${
                 draggedLayer === layer.id ? 'cursor-grabbing' : 'cursor-grab'
               } ${layer.selected ? 'ring-2 ring-blue-500' : ''}`}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
+              initial={false}
+              animate={{ 
+                scale: draggedLayer === layer.id ? 1.02 : 1,
+                boxShadow: draggedLayer === layer.id ? '0 8px 16px rgba(0,0,0,0.12)' : 'none'
+              }}
+              transition={{ 
+                type: "spring",
+                stiffness: 300,
+                damping: 30
+              }}
               style={{
                 left: layer.position.x,
                 top: layer.position.y,
                 width: layer.size?.width || 140,
                 height: layer.size?.height || 80,
+                willChange: 'transform',
                 opacity: layer.visible ? 1 : 0.5,
-                transform: `rotate(${layer.style?.rotation || 0}deg)`,
+                pointerEvents: layer.visible ? 'auto' : 'none'
               }}
               onMouseDown={(e) => handleLayerMouseDown(e, layer.id)}
               onClick={() => {
                 selectLayer(layer.id);
-                if (layer.type.includes('aliases') || layer.type === 'zshrc' || layer.type === 'main' || layer.type === 'functions') {
-                  setSelectedNodeId(layer.id);
-                }
+                handleLayerClick(layer);
               }}
               onMouseEnter={() => setHoveredLayer(layer.id)}
               onMouseLeave={() => {
                 setHoveredLayer(null);
                 handleLayerMouseUp();
               }}
+              dragMomentum={false}
+              dragElastic={0}
             >
               <LayerComponent {...layer} />
+              {/* Resize Handles */}
+              {layer.selected && (
+                <>
+                  <div
+                    className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize z-50 shadow-md"
+                    onMouseDown={(e) => handleResizeStart(layer.id, 'nw', e)}
+                  />
+                  <div
+                    className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize z-50 shadow-md"
+                    onMouseDown={(e) => handleResizeStart(layer.id, 'ne', e)}
+                  />
+                  <div
+                    className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize z-50 shadow-md"
+                    onMouseDown={(e) => handleResizeStart(layer.id, 'sw', e)}
+                  />
+                  <div
+                    className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize z-50 shadow-md"
+                    onMouseDown={(e) => handleResizeStart(layer.id, 'se', e)}
+                  />
+                </>
+              )}
             </motion.div>
           );
         })}
@@ -521,23 +659,23 @@ export function Canvas() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => updateScale(Math.min(MAX_SCALE, scale + SCALE_STEP))}
-            className="p-2 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg"
+            onClick={handleZoomIn}
+            className="p-2 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
           >
-            <ZoomIn className="w-5 h-5 text-gray-600 dark:text-gray-400" weight="duotone" />
+            <MagnifyingGlassPlus className="w-5 h-5 text-gray-600 dark:text-gray-400" weight="duotone" />
           </motion.button>
         </Tooltip>
         <Tooltip content="Zoom out">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => updateScale(Math.max(MIN_SCALE, scale - SCALE_STEP))}
-            className="p-2 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg"
+            onClick={handleZoomOut}
+            className="p-2 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
           >
-            <ZoomOut className="w-5 h-5 text-gray-600 dark:text-gray-400" weight="duotone" />
+            <MagnifyingGlassMinus className="w-5 h-5 text-gray-600 dark:text-gray-400" weight="duotone" />
           </motion.button>
         </Tooltip>
-        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+        <div className="text-xs text-gray-500 dark:text-gray-400 text-center font-medium">
           {Math.round(scale * 100)}%
         </div>
       </div>
@@ -568,6 +706,7 @@ export function Canvas() {
           />
         )}
       </AnimatePresence>
+
     </div>
   );
 }

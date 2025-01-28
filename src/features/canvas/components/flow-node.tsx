@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import AnimatedNode from "../../../components/animated-node"
 
 interface FlowNodeProps {
   id: string
@@ -10,11 +10,10 @@ interface FlowNodeProps {
   variant?: "default" | "highlight" | "source"
   color?: "purple" | "blue" | "green" | "red" | "orange" | "yellow"
   shape?: "square" | "rectangle" | "rounded"
-  className?: string
-  code?: string
-  language?: string
   fill?: string
   allNodes?: Array<{ id: string; parent?: string; label: string }>
+  code?: string
+  language?: string
 };
 
 export function FlowNode({
@@ -26,9 +25,6 @@ export function FlowNode({
   variant = "default",
   color = "blue",
   shape = "rounded",
-  className,
-  code = "",
-  language = "bash",
   fill,
   allNodes = [],
 }: FlowNodeProps): JSX.Element {
@@ -36,31 +32,13 @@ export function FlowNode({
   const children = allNodes.filter(node => node.parent === id);
   const parentNode = allNodes.find(node => node.id === parent);
 
-  const colorStyles = {
-    purple: {
-      bg: "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30 dark:bg-purple-900/30 dark:border-purple-800/50",
-      tooltip: "bg-purple-900/90 border-purple-800"
-    },
-    blue: {
-      bg: "bg-blue-900/20 border-blue-800/50 hover:bg-blue-900/30 dark:bg-blue-900/30 dark:border-blue-800/50",
-      tooltip: "bg-blue-900/90 border-blue-800"
-    },
-    green: {
-      bg: "bg-emerald-900/20 border-emerald-800/50 hover:bg-emerald-900/30 dark:bg-emerald-900/30 dark:border-emerald-800/50",
-      tooltip: "bg-emerald-900/90 border-emerald-800"
-    },
-    red: {
-      bg: "bg-red-900/20 border-red-800/50 hover:bg-red-900/30 dark:bg-red-900/30 dark:border-red-800/50",
-      tooltip: "bg-red-900/90 border-red-800"
-    },
-    orange: {
-      bg: "bg-orange-900/20 border-orange-800/50 hover:bg-orange-900/30 dark:bg-orange-900/30 dark:border-orange-800/50",
-      tooltip: "bg-orange-900/90 border-orange-800"
-    },
-    yellow: {
-      bg: "bg-yellow-900/20 border-yellow-800/50 hover:bg-yellow-900/30 dark:bg-yellow-900/30 dark:border-yellow-800/50",
-      tooltip: "bg-yellow-900/90 border-yellow-800"
-    }
+  const colorMap = {
+    purple: '#9333ea',
+    blue: '#3b82f6',
+    green: '#10b981',
+    red: '#ef4444',
+    orange: '#f97316',
+    yellow: '#eab308'
   };
 
   const shapeStyles = {
@@ -69,47 +47,36 @@ export function FlowNode({
     rounded: "w-[120px] min-h-[100px]"
   }
 
-  const variantStyles = {
-    default: "",
-    highlight: colorStyles[color].bg,
-    source: "bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-800/70"
+  const colorStyles = {
+    purple: { tooltip: "bg-purple-900/90 border-purple-800" },
+    blue: { tooltip: "bg-blue-900/90 border-blue-800" },
+    green: { tooltip: "bg-emerald-900/90 border-emerald-800" },
+    red: { tooltip: "bg-red-900/90 border-red-800" },
+    orange: { tooltip: "bg-orange-900/90 border-orange-800" },
+    yellow: { tooltip: "bg-yellow-900/90 border-yellow-800" }
   };
 
   return (
     <div className="group relative">
-      <div 
-        style={{ backgroundColor: fill }}
-        className={[
-          "relative flex flex-col items-center",
-          "max-w-[160px] p-4",
-          "border border-zinc-800/50",
-          "transition-all duration-200",
-          "shadow-sm shadow-zinc-900/10",
-          "rounded-xl",
-          "overflow-hidden",
-          !fill && "bg-zinc-950/90 dark:bg-zinc-900/90",
-          variantStyles[variant],
-          shapeStyles[shape],
-        ].filter(Boolean).join(" ")}
-        data-id={id}
-        data-parent={parent}
-      >
-        {metadata && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400 mb-2.5">
-            {metadata}
-          </span>
-        )}
-        <div className="flex flex-col items-center gap-3.5 flex-1 justify-center">
-          {icon && (
-            <div className="text-zinc-400 dark:text-zinc-300 w-6 h-6 flex items-center justify-center">
-              {icon}
-            </div>
+      <AnimatedNode color={fill || colorMap[color]} className={shapeStyles[shape]}>
+        <div className="flex flex-col items-center">
+          {metadata && (
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 mb-2.5">
+              {metadata}
+            </span>
           )}
-          <span className="text-xs leading-normal text-zinc-300 dark:text-zinc-200 text-center min-h-[2.5em] flex items-center">
-            {label}
-          </span>
+          <div className="flex flex-col items-center gap-3.5 flex-1 justify-center">
+            {icon && (
+              <div className="text-zinc-400 dark:text-zinc-300 w-6 h-6 flex items-center justify-center">
+                {icon}
+              </div>
+            )}
+            <span className="text-xs leading-normal text-zinc-300 dark:text-zinc-200 text-center min-h-[2.5em] flex items-center">
+              {label}
+            </span>
+          </div>
         </div>
-      </div>
+      </AnimatedNode>
 
       {/* Relationship Tooltip */}
       <div className={[
