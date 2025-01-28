@@ -1,7 +1,7 @@
 export function cn(...classes: (string | undefined | false | null)[]): string {
-    return classes.filter(Boolean).join(' ');
-  }
-  
+  return classes.filter(Boolean).join(" ");
+}
+
 type UniqueBadgeProps = {
   text: string;
   textColor?: string;
@@ -39,7 +39,7 @@ export default function UniqueBadge({
     <span
       className={cn(
         `relative ${backgroundColor} ${sizeClasses[size]} font-medium ${textColor} ${darkModeClasses.backgroundColor}`,
-        className, // Merge additional classes
+        className // Merge additional classes
       )}
     >
       {text}

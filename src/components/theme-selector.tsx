@@ -1,24 +1,19 @@
-/**
- * @author Remco Stoeten
- * @description Theme selector component with preview and accessibility information
- */
-
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../shared/context/theme-context';
-import { Check, PaintBrush } from '@phosphor-icons/react';
-import { Theme } from '../shared/config/themes';
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useTheme } from "../shared/context/theme-context"
+import { Check, PaintBrush } from "@phosphor-icons/react"
+import type { Theme } from "../shared/config/themes"
 
 export function ThemeSelector() {
-  const { currentTheme, setTheme, themes } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
+  const { currentTheme, setTheme, themes } = useTheme()
+  const [isOpen, setIsOpen] = useState(false)
 
   const previewColors = (theme: Theme) => [
     theme.colors.primary,
     theme.colors.secondary,
     theme.colors.accent,
-    theme.colors.background.default
-  ];
+    theme.colors.background.default,
+  ]
 
   return (
     <div className="relative">
@@ -47,45 +42,34 @@ export function ThemeSelector() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setTheme(theme.name);
-                    setIsOpen(false);
+                    setTheme(theme.name)
+                    setIsOpen(false)
                   }}
                   className={`
                     p-3 rounded-lg flex items-start gap-3 w-full text-left
-                    ${currentTheme.name === theme.name 
-                      ? 'bg-[var(--primary)] bg-opacity-10' 
-                      : 'hover:bg-[var(--background-subtle)]'
+                    ${
+                      currentTheme.name === theme.name
+                        ? "bg-[var(--primary)] bg-opacity-10"
+                        : "hover:bg-[var(--background-subtle)]"
                     }
                   `}
                 >
                   <div className="w-12 h-12 rounded-md overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 bg-[var(--background-subtle)]">
                     {previewColors(theme).map((color, i) => (
-                      <div 
-                        key={i} 
-                        style={{ backgroundColor: color }} 
-                        className="w-full h-full"
-                      />
+                      <div key={i} style={{ backgroundColor: color }} className="w-full h-full" />
                     ))}
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-[var(--text-primary)]">
-                        {theme.label}
-                      </span>
+                      <span className="font-medium text-[var(--text-primary)]">{theme.label}</span>
                       {currentTheme.name === theme.name && (
                         <Check className="w-4 h-4 text-[var(--primary)]" weight="bold" />
                       )}
                     </div>
-                    {theme.author && (
-                      <span className="text-xs text-[var(--text-muted)]">
-                        by {theme.author}
-                      </span>
-                    )}
+                    {theme.author && <span className="text-xs text-[var(--text-muted)]">by {theme.author}</span>}
                     {theme.description && (
-                      <p className="text-sm text-[var(--text-secondary)] mt-1">
-                        {theme.description}
-                      </p>
+                      <p className="text-sm text-[var(--text-secondary)] mt-1">{theme.description}</p>
                     )}
                   </div>
                 </motion.button>
@@ -95,5 +79,6 @@ export function ThemeSelector() {
         )}
       </AnimatePresence>
     </div>
-  );
-} 
+  )
+}
+
