@@ -13,6 +13,13 @@ import { useLayout } from '../../../shared/context/layout-context';
 import { useKeyboardShortcut } from '../../../shared/hooks/useKeyboardShortcut';
 import { Tooltip } from '../../../shared/components/tooltip';
 import { Kbd } from '../../../shared/components/kbd';
+import UniqueBadge from '../../../components/badge';
+
+const GradientText = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <span className={`font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-muted to-primary ${className}`}>
+    {children}
+  </span>
+);
 
 export const TopNav: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -32,18 +39,36 @@ export const TopNav: React.FC = () => {
   );
 
   return (
-    <nav className="h-16 border-b border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#1A1A1A] px-6 flex items-center justify-between">
-      <div className="flex flex-col">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Shell Config Builder
-          <UniqueBadge text="Beta" className="ml-2" />
-
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 hidden md:block">
-          Visual configuration builder for your shell environment
+    <nav className="h-16 border-b border-default bg-paper flex items-center justify-between relative overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 via-gray-100/50 to-gray-50/50 dark:from-gray-900/30 dark:via-gray-800/30 dark:to-gray-900/30 pointer-events-none" />
+      
+      <div className="flex flex-col relative">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-baseline">
+            <GradientText className="text-2xl tracking-tight">
+              shell
+            </GradientText>
+            <span className="text-2xl font-light text-gray-400 dark:text-gray-500 mx-1">
+              /
+            </span>
+            <GradientText className="text-2xl tracking-tight">
+              config
+            </GradientText>
+            <UniqueBadge 
+              text="β" 
+              className="ml-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 
+                        dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 
+                        border-0 font-mono text-xs text-gray-600 dark:text-gray-400" 
+            />
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400 hidden md:block font-mono tracking-tight opacity-75">
+          ~/visual-shell-configuration-tool
         </p>
       </div>
-      <div className="flex items-center space-x-2">
+
+      <div className="flex items-center space-x-2 relative">
         <Tooltip
           content={
             <div className="flex items-center space-x-1">
@@ -54,7 +79,7 @@ export const TopNav: React.FC = () => {
         >
           <button
             onClick={toggleSidebar}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-lg transition-colors"
+            className="p-2 rounded-lg transition-all duration-200 hover:bg-subtle active:scale-95"
           >
             {isSidebarOpen ? (
               isSidebarRight ? (
@@ -91,18 +116,20 @@ export const TopNav: React.FC = () => {
         <Tooltip content="Toggle theme">
           <button
             onClick={toggleTheme}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-lg transition-colors"
+            className="p-2 rounded-lg transition-all duration-200 hover:bg-subtle active:scale-95"
           >
             {theme === 'dark' ? (
-              <Sun className="w-5 h-5 text-gray-600 dark:text-gray-400" weight="duotone" />
+              <Sun className="w-5 h-5 text-muted" weight="duotone" />
             ) : (
-              <Moon className="w-5 h-5 text-gray-600" weight="duotone" />
+              <Moon className="w-5 h-5 text-muted" weight="duotone" />
             )}
           </button>
         </Tooltip>
         <Tooltip content="Settings">
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-lg transition-colors">
-            <Gear className="w-5 h-5 text-gray-600 dark:text-gray-400" weight="duotone" />
+          <button 
+            className="p-2 rounded-lg transition-all duration-200 hover:bg-subtle active:scale-95"
+          >
+            <Gear className="w-5 h-5 text-muted" weight="duotone" />
           </button>
         </Tooltip>
       </div>

@@ -185,7 +185,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-80 border-r border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#1A1A1A] h-[calc(100vh-4rem)] flex flex-col">
+    <div className="w-80 border-r border-default bg-paper h-[calc(100vh-4rem)] flex flex-col">
       <div className="p-3">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-gray-500" weight="duotone" />

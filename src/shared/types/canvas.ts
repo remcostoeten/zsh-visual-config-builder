@@ -47,3 +47,17 @@ export interface Connector {
   parentId: string;
   childId: string;
 }
+
+export interface Layer {
+  id: string;
+  name: string;
+  type: string;
+  position?: Point;
+  visible?: boolean;
+  selected?: boolean;
+  connectors?: Array<{
+    id: string;
+    startPoint: Point;
+    endPoint: Point;
+  }>;
+}

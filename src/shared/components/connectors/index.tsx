@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Point, Connector } from '../../types/canvas';
+import type { Layer } from '../../../features/canvas/types';
 
 interface ConnectorProps {
   start: Point;
@@ -47,28 +48,31 @@ export function Connector({ start, end, type, color = '#4B5563', thickness = 2, 
 }
 
 interface ConnectorGroupProps {
-  connectors: Connector[];
-  settings: {
-    color: string;
-    thickness: number;
-    animate: boolean;
-  };
+  layer: Layer;
 }
 
-export function ConnectorGroup({ connectors, settings }: ConnectorGroupProps) {
+export function ConnectorGroup({ layer }: ConnectorGroupProps) {
+  // Early return if no connectors or layer is undefined
+  if (!layer || !layer.connectors) {
+    return null;
+  }
+
   return (
-    <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
-      {connectors.map((connector, index) => (
-        <Connector
-          key={`${connector.parentId}-${connector.childId}-${index}`}
-          start={connector.start}
-          end={connector.end}
-          type={connector.type}
-          color={settings.color}
-          thickness={settings.thickness}
-          animate={settings.animate}
-        />
+    <div className="absolute inset-0 pointer-events-none">
+      {layer.connectors.map((connector) => (
+        <div 
+          key={connector.id}
+          className="absolute"
+          style={{
+            left: connector.startPoint.x,
+            top: connector.startPoint.y,
+            width: connector.endPoint.x - connector.startPoint.x,
+            height: connector.endPoint.y - connector.startPoint.y
+          }}
+        >
+          {/* Connector line/path rendering here */}
+        </div>
       ))}
-    </svg>
+    </div>
   );
 }

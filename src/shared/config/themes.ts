@@ -86,6 +86,7 @@ export type Theme = {
   colors: ThemeColors;
   author?: string;
   description?: string;
+  dark?: ThemeColors;
 };
 
 export const themes: Theme[] = [
@@ -184,45 +185,87 @@ export const themes: Theme[] = [
   {
     name: 'monochrome',
     label: 'Monochrome',
+    description: 'A refined monochromatic color scheme',
     colors: {
-      primary: '#000000',
-      secondary: '#333333',
-      accent: '#666666',
+      primary: '#1a1a1a',
+      secondary: '#2a2a2a',
+      accent: '#404040',
       background: {
         default: '#ffffff',
-        paper: '#f5f5f5',
-        subtle: '#eeeeee',
+        paper: '#fafafa',
+        subtle: '#f5f5f5',
       },
       text: {
-        primary: '#000000',
-        secondary: '#333333',
+        primary: '#1a1a1a',
+        secondary: '#404040',
         muted: '#666666',
       },
       border: {
-        default: '#cccccc',
-        subtle: '#eeeeee',
+        default: '#e0e0e0',
+        subtle: '#f0f0f0',
       },
       node: {
         background: '#ffffff',
-        border: '#000000',
-        text: '#000000',
+        border: '#e0e0e0',
+        text: '#1a1a1a',
       },
       canvas: {
-        background: '#f5f5f5',
-        grid: '#cccccc',
+        background: '#fafafa',
+        grid: '#e5e5e5',
       },
       button: {
-        primary: '#000000',
-        secondary: '#333333',
-        hover: '#666666',
-        disabled: '#999999',
+        primary: '#1a1a1a',
+        secondary: '#2a2a2a',
+        hover: '#404040',
+        disabled: '#a0a0a0',
         text: '#ffffff',
       },
       input: {
         background: '#ffffff',
-        border: '#cccccc',
-        focus: '#000000',
-        placeholder: '#999999',
+        border: '#e0e0e0',
+        focus: '#1a1a1a',
+        placeholder: '#a0a0a0',
+      },
+    },
+    dark: {
+      primary: '#ffffff',
+      secondary: '#e0e0e0',
+      accent: '#c0c0c0',
+      background: {
+        default: '#141414',
+        paper: '#1a1a1a',
+        subtle: '#202020',
+      },
+      text: {
+        primary: '#ffffff',
+        secondary: '#e0e0e0',
+        muted: '#a0a0a0',
+      },
+      border: {
+        default: '#2a2a2a',
+        subtle: '#202020',
+      },
+      node: {
+        background: '#1a1a1a',
+        border: '#2a2a2a',
+        text: '#ffffff',
+      },
+      canvas: {
+        background: '#141414',
+        grid: '#202020',
+      },
+      button: {
+        primary: '#ffffff',
+        secondary: '#e0e0e0',
+        hover: '#c0c0c0',
+        disabled: '#404040',
+        text: '#1a1a1a',
+      },
+      input: {
+        background: '#1a1a1a',
+        border: '#2a2a2a',
+        focus: '#ffffff',
+        placeholder: '#666666',
       },
     },
   },
