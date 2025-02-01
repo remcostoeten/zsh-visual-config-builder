@@ -1,3 +1,3 @@
 export function useQuickAdd() {
-  // ... existing implementation
-} 
+    // ... existing implementation
+}

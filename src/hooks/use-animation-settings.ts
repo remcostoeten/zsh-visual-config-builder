@@ -1,3 +1,3 @@
 export function useAnimationSettings() {
-  // ... existing implementation
-} 
+    // ... existing implementation
+}

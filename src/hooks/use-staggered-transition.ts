@@ -1,3 +1,3 @@
 export function useStaggeredTransition() {
-  // ... existing implementation
-} 
+    // ... existing implementation
+}

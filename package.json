@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build", 
+    "dev": "concurrently \"vite\" \"npm run server\"",
+    "start": "concurrently \"vite\" \"npm run server\"",
+    "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "bash run-server.sh",
-    "start": "node -e \"const { execSync } = require('child_process'); const hasPnpm = !execSync('command -v pnpm >/dev/null 2>&1 || echo \"false\"').toString(); const cmd = hasPnpm ? 'pnpm' : 'npm'; console.log('Using ' + cmd); execSync(cmd + ' run dev & ' + cmd + ' run server', {stdio: 'inherit'});\""
+    "server": "cd server && npm run dev",
+    "f": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md,html,yaml,yml,graphql,less,vue,svelte,php,ruby,py,java,go,rust,c,cpp,h,hpp}\""
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
@@ -17,6 +18,7 @@
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-slot": "^1.0.2",
     "class-variance-authority": "^0.7.0",
+    "concurrently": "^9.1.2",
     "date-fns": "^3.3.1",
     "framer-motion": "^10.18.0",
     "lucide-react": "^0.344.0",
@@ -27,7 +29,9 @@
     "react-draggable": "^4.4.6",
     "react-router-dom": "^6.22.0",
     "shell-parse": "^0.0.2",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
@@ -41,6 +45,7 @@
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
+    "prettier": "^3.2.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
