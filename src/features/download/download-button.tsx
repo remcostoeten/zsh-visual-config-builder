@@ -1,24 +1,27 @@
-import { ChevronDown, Download, Copy, Terminal } from "lucide-react"
+import { ChevronDown, Download, Copy, Terminal, Upload, Github } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { generateCommands } from '@/lib/commands'
+import { generateCommands } from '@/utils/commands'
 import { ConfigNode } from '@/types/config'
 import { ConnectorSettings } from '@/types/settings'
 import { Toast } from '@/components/ui/toast'
 import { useToast } from '@/hooks/use-toast'
+import { useSettingsStore } from '@/features/settings/settings-slice'
+import { useAuthStore } from '@/features/auth/github-auth'
+import { githubGistService } from '@/features/persistence/github-gist'
+import { useCanvasStore } from '@/features/canvas/canvas-slice'
 
-interface DownloadButtonProps {
+interface Props {
   config: ConfigNode
-  basePath: string
   settings: ConnectorSettings
 }
 
-export function DownloadButton({ config, basePath, settings }: DownloadButtonProps) {
+export function DownloadButton({ config, settings }: Props) {
   const { state, showToast } = useToast();
 
   const handleDownloadShellScript = () => {
     showToast('loading');
-    const commands = generateCommands(config, basePath, settings)
+    const commands = generateCommands(config, '', settings)
     const blob = new Blob([commands], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -32,7 +35,7 @@ export function DownloadButton({ config, basePath, settings }: DownloadButtonPro
 
   const handleCopyCommands = () => {
     showToast('loading');
-    const commands = generateCommands(config, basePath, settings)
+    const commands = generateCommands(config, '', settings)
     navigator.clipboard.writeText(commands)
   }
 

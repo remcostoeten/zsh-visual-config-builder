@@ -1,6 +1,6 @@
 import React from 'react';
 import { Book, Code } from 'lucide-react';
-import { shellSnippets, ShellSnippet } from '../utils/shellSnippets';
+import { shellSnippets } from '../utils/shell-snippets';
 
 interface Props {
   onInsertSnippet: (code: string) => void;

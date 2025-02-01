@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
-import { validateShellScript } from '@/utils/shellValidation';
-import ShellHelpers from './ShellHelpers';
+import { validateShellScript } from '../../../utils/shell-validation';
+import ShellHelpers from './shell-helpers';
 
 interface Props {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
-import { validateShellScript } from '../utils/shellValidation';
+import { validateShellScript } from '../utils/shell-validation';
 import ShellHelpers from './ShellHelpers';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 

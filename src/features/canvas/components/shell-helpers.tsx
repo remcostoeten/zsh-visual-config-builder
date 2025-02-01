@@ -7,14 +7,14 @@ import {
   Terminal,
   HelpCircle,
 } from 'lucide-react';
-import { shellSnippets } from '@/utils/shellSnippets';
-import { devTemplate, dockerTemplate } from '@/config/templates';
+import { shellSnippets } from '../../../utils/shell-snippets';
+import { devTemplate, dockerTemplate } from '../../../config/templates';
 import { useCanvasStore } from '../canvas-slice';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/shared/components/ui/popover';
+} from '../../../components/ui/popover';
 
 interface Props {
   onInsertSnippet: (code: string) => void;

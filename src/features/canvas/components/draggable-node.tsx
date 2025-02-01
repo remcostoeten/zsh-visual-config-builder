@@ -2,29 +2,28 @@ import React, { useRef } from 'react';
 import Draggable, { DraggableData } from 'react-draggable';
 import { File, Edit2, Link, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ConfigNode } from '@/types/config';
-import MonacoEditorModal from './MonacoEditorModal';
-import SourceFile from './SourceFile';
+import MonacoEditorModal from './monaco-editor';
 import { useCanvasStore } from '../canvas-slice';
+import { ConfigNode, Position } from '../../../types/config';
 
 interface Props {
   node: ConfigNode;
+  position: Position;
   onUpdate: (id: string, updates: Partial<ConfigNode>) => void;
-  onPositionChange: (id: string, x: number, y: number) => void;
-  onDrag: (id: string, x: number, y: number) => void;
-  position: { x: number; y: number };
+  onPositionChange: (id: string, position: Position) => void;
+  onDrag: (id: string, position: Position) => void;
   onDelete?: (id: string) => void;
   onLink?: (id: string) => void;
 }
 
-export default function DraggableNode({ node, onUpdate, onPositionChange, onDrag, position, onDelete, onLink }: Props) {
+export function DraggableNode({ node, position, onUpdate, onPositionChange, onDrag, onDelete, onLink }: Props) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showEditor, setShowEditor] = React.useState(false);
   const { orientation, removeNode, startLinking, linkingNode, finishLinking } = useCanvasStore();
   const nodeRef = useRef(null);
 
-  const sourceFiles = node.content.match(/source.*\.sh/g) || [];
-  const isLinking = linkingNode !== null;
+  // const sourceFiles = node.content.match(/source.*\.sh/g) || [];
+  // const isLinking = linkingNode !== null;
 
   const getNodeColors = () => {
     switch (node.type) {
@@ -38,11 +37,11 @@ export default function DraggableNode({ node, onUpdate, onPositionChange, onDrag
   };
 
   const handleDrag = (_: any, data: DraggableData) => {
-    onDrag(node.id, data.x, data.y);
+    onDrag(node.id, { x: data.x, y: data.y });
   };
 
   const handleStop = (_: any, data: DraggableData) => {
-    onPositionChange(node.id, data.x, data.y);
+    onPositionChange(node.id, { x: data.x, y: data.y });
   };
 
   const handleNodeClick = (e: React.MouseEvent) => {

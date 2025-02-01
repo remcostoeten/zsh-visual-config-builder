@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { useCanvasStore } from '../canvas-slice';
-import { useSettingsStore } from '@/features/settings/settings-slice';
-import DraggableNode from './DraggableNode';
-import AnimatedConnector from './AnimatedConnector';
-import QuickAddMenu from './QuickAddMenu';
-import { X, FlipHorizontal2, FlipVertical2, GitFork, FileCode, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ZenModeToolbar } from '@/components/ZenModeToolbar';
+import { DraggableNode } from './draggable-node';
+import { AnimatedConnector } from './animated-connector';
+import { X, FlipHorizontal2, FlipVertical2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useSettingsStore } from '../../settings/settings-slice';
+import QuickAddMenu from './quick-add-menu';
+import { ZenModeToolbar } from '../../../components/ZenModeToolbar';
+import { ConfigNode, NodeType, Position } from '../../../types/config';
 
 export function Canvas() {
   const { 
@@ -21,13 +22,11 @@ export function Canvas() {
     setQuickAddPosition,
     addNode,
     cancelLinking,
-    cycleOrientation,
-    setIsZenMode
   } = useCanvasStore();
   
   const { settings } = useSettingsStore();
   const canvasRef = React.useRef<HTMLDivElement>(null);
-  const [showHint, setShowHint] = React.useState(true);
+  const [, setShowHint] = React.useState(true);
 
   // Hide hint when first node is added
   React.useEffect(() => {
@@ -69,7 +68,7 @@ export function Canvas() {
 
   const renderConnectors = (node: ConfigNode) => {
     if (!node.children) return null;
-    return node.children.map(child => {
+    return node.children.map((child: ConfigNode) => {
       const startPos = positions[node.id];
       const endPos = positions[child.id];
       if (!startPos || !endPos) return null;
@@ -140,7 +139,7 @@ export function Canvas() {
       >
         {renderConnectors(config)}
         
-        {Object.entries(positions).map(([id, position]) => {
+        {Object.entries(positions).map(([id, position]: [string, Position]) => {
           const findNode = (node: ConfigNode): ConfigNode | null => {
             if (node.id === id) return node;
             if (node.children) {
@@ -160,8 +159,8 @@ export function Canvas() {
               key={id}
               node={node}
               onUpdate={updateNode}
-              onPositionChange={updateNodePosition}
-              onDrag={updateNodePosition}
+              onPositionChange={(id: string, pos: Position) => updateNodePosition(id, pos.x, pos.y)}
+              onDrag={(id: string, pos: Position) => updateNodePosition(id, pos.x, pos.y)}
               position={position}
             />
           );
@@ -170,7 +169,7 @@ export function Canvas() {
         {quickAddPosition && (
           <QuickAddMenu
             position={quickAddPosition}
-            onSelect={(type, template) => {
+            onSelect={(type: NodeType, template: ConfigNode) => {
               addNode(type, template);
               setQuickAddPosition(null);
             }}

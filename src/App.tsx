@@ -3,19 +3,20 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useSearchParams } 
 import { useCanvasStore } from './features/canvas/canvas-slice';
 import { useSettingsStore } from './features/settings/settings-slice';
 import { persistenceService } from './features/persistence/persistence-service';
-import { Canvas } from './features/canvas/components/Canvas';
-import Introduction from './components/Introduction';
-import { DownloadButton } from './components/DownloadButton';
+import { Canvas } from './features/canvas/components/canvas';
+import { Introduction } from './components/introduction';
+import { DownloadButton } from './features/download/download-button';
 import { CanvasActions } from './components/canvas-actions';
-import CanvasSettings from './components/CanvasSettings';
-import Settings from './components/Settings';
-import Footer from './components/Footer';
-import Toast from './components/ui/toast';
-import { useToast } from './hooks/useToast';
-import RoadmapPage from './features/roadmap/components/RoadmapPage';
-import PathConfig from './components/PathConfig';
+import { CanvasSettings } from './components/canvas-settings';
+import { Settings } from './components/settings';
+import { Footer } from './components/footer';
+import { Toast } from './components/ui/toast';
+import { useToast } from './hooks/use-toast';
+import { RoadmapPage } from './features/roadmap/components/roadmap-page';
+import { PathConfig } from './components/path-config';
 import { useAuthStore } from './features/auth/github-auth';
-import { UserMenu } from './components/UserMenu';
+import { UserMenu } from './features/auth/components/user-menu';
+import { ConfigNode } from './types/config';
 
 function AppContent() {
   const { 
@@ -49,19 +50,19 @@ function AppContent() {
       setConfig(savedConfig);
       markChangesSaved();
       setShowUnsavedToast(false);
-      showToast('success', 'Changes reset to last saved version');
+      showToast({ type: 'success', message: 'Changes reset to last saved version' });
     }
   }, [setConfig, markChangesSaved, showToast]);
 
   const handleSaveConfig = useCallback(() => {
     saveConfig();
-    showToast('success', 'Configuration saved successfully');
+    showToast({ type: 'success', message: 'Configuration saved successfully' });
     setShowUnsavedToast(false);
   }, [saveConfig]);
 
   const handleLoadConfig = useCallback((config: ConfigNode) => {
     loadConfig(config);
-    showToast('success', 'Configuration loaded successfully');
+    showToast({ type: 'success', message: 'Configuration loaded successfully' });
   }, [loadConfig]);
 
   useEffect(() => {
@@ -99,6 +100,12 @@ function AppContent() {
                 ZSH Config Builder
               </h1>
               <div className="flex items-center gap-4">
+                <Introduction
+                  onTemplateSelect={setConfig}
+                  onSaveConfig={handleSaveConfig}
+                  onLoadConfig={handleLoadConfig}
+                  currentConfig={config}
+                />
                 <UserMenu />
                 <CanvasActions onClearCanvas={clearCanvas} />
                 <CanvasSettings settings={settings} onSettingsChange={updateSettings} />
@@ -109,13 +116,6 @@ function AppContent() {
                 />
               </div>
             </div>
-
-            <Introduction
-              onTemplateSelect={setConfig}
-              onSaveConfig={handleSaveConfig}
-              onLoadConfig={handleLoadConfig}
-              currentConfig={config}
-            />
           </div>
 
           <div className="relative">

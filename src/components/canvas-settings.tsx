@@ -3,14 +3,14 @@ import { Settings2, Zap, Weight as LineHeight, Palette } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Button } from './ui/button';
 import { ConnectorSettings } from '../types/settings';
-import ColorPicker from './ColorPicker';
+import { ColorPicker } from './color-picker';
 
 interface Props {
   settings: ConnectorSettings;
   onSettingsChange: (settings: ConnectorSettings) => void;
 }
 
-export default function CanvasSettings({ settings, onSettingsChange }: Props) {
+export function CanvasSettings({ settings, onSettingsChange }: Props) {
   const handleSpeedChange = (speed: number) => {
     onSettingsChange({ ...settings, animationSpeed: speed });
   };
