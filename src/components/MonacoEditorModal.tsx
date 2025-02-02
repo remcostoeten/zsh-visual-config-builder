@@ -2,7 +2,8 @@ import React, { useEffect, useRef } from 'react'
 import Editor from '@monaco-editor/react'
 import { validateShellScript } from '../utils/shell-validation'
 import ShellHelpers from './ShellHelpers'
-import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
+import { Dialog, DialogContent } from '@/shared/components/ui'
+import { DialogTitle } from '@radix-ui/react-dialog'
 import { Button } from './ui/button'
 
 interface Props {

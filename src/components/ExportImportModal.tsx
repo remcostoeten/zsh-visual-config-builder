@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
-import { Button } from './ui/button'
+import { Button } from '@/shared/components/ui/button'
 import { Download, Upload, Clipboard, Check, AlertCircle } from 'lucide-react'
 import { configExport } from '../utils/config-export'
 import { useCanvasStore } from '../features/canvas/canvas-slice'
+import { Dialog, DialogContent } from '@/shared/components/ui'
+import { DialogTitle } from '@radix-ui/react-dialog'
 
 interface Props {
     isOpen: boolean

@@ -1,163 +1,202 @@
-import React, { useRef, useState } from 'react'
-import Editor, { OnMount } from '@monaco-editor/react'
-import { validateShellScript } from '../../../utils/shell-validation'
-import ShellHelpers from './shell-helpers'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Toast } from '@/shared/components/ui/toast/toast'
+"use client"
 
-interface Props {
-    isOpen: boolean
-    onClose: () => void
-    title: string
-    content: string
-    onSave: (content: string) => void
-    node?: any
+import { Button } from "@/shared/components/ui/button"
+import { Terminal, FileCode, Copy, Trash2, ClipboardPaste, FileCheck } from "lucide-react"
+import Editor from "@monaco-editor/react"
+import { useRef } from "react"
+import { ScrollArea } from "@/shared/components/ui/button"
+import { Dialog, DialogContent } from "@/shared/components/ui"
+import { DialogTitle } from "@radix-ui/react-dialog"
+
+interface MainConfigEditorProps {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (content: string) => void
+  initialContent?: string
 }
 
-export default function MonacoEditorModal({ isOpen, onClose, title, content, onSave, node }: Props) {
-    const [editorContent, setEditorContent] = useState(content)
-    const [validation, setValidation] = React.useState({ isValid: true })
-    const [showToast, setShowToast] = useState(false)
-    const editorRef = useRef<any>(null)
-    const isMainNode = node?.type === 'main'
+const TEMPLATE = `#!/bin/zsh
+# Shell Configuration
+# Generated with Shell Config Builder
 
-    const handleEditorDidMount: OnMount = editor => {
-        editorRef.current = editor
+# Function to source files if they exist and are readable
+function source_if_exists() {
+    [ -r "$1" ] && source "$1"
+}
+
+# Function to recursively source all injector files
+function source_injectors() {
+    local search_dir="$1"
+    for injector in $(find "$search_dir" -type f -name "*_injector.sh"); do
+        source_if_exists "$injector"
+    done
+}
+
+# Source all configuration files
+source_injectors "$HOME/.zsh"`
+
+export default function MainConfigEditor({ isOpen, onClose, onSave, initialContent = TEMPLATE }: MainConfigEditorProps) {
+  const editorRef = useRef<any>(null)
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor
+  }
+
+  const formatCode = () => {
+    editorRef.current?.getAction("editor.action.formatDocument").run()
+  }
+
+  const clearCode = () => {
+    editorRef.current?.setValue("")
+  }
+
+  const copyCode = () => {
+    const code = editorRef.current?.getValue()
+    if (code) navigator.clipboard.writeText(code)
+  }
+
+  const pasteCode = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      editorRef.current?.setValue(text)
+    } catch (err) {
+      console.error("Failed to paste:", err)
     }
+  }
 
-    const validateMainNodeContent = (content: string): boolean => {
-        const lines = content.split('\n')
-        const validLines = lines.every(line => {
-            const trimmed = line.trim()
-            return (
-                trimmed.startsWith('#') || // Comments are ok
-                trimmed.startsWith('source') || // Source commands are ok
-                trimmed.startsWith('for') || // For loops for sourcing are ok
-                trimmed.startsWith('[') || // Directory checks are ok
-                trimmed === '' // Empty lines are ok
-            )
-        })
-        return validLines
-    }
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="w-full max-w-[80vw] h-[85vh] max-h-[900px] p-0 gap-0 bg-[#1E1E1E] border-zinc-800 overflow-hidden">
+        <DialogTitle className="p-4 border-b border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-zinc-800">
+              <Terminal className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-zinc-200">Main Configuration</DialogTitle>
+              <p className="text-sm text-zinc-400">
+                This file automatically sources all injector files from your .zsh directory
+              </p>
+            </div>
+          </div>
+        </DialogTitle>
 
-    const handleContentChange = (value: string) => {
-        if (isMainNode) {
-            if (!validateMainNodeContent(value)) {
-                setShowToast(true)
-                return
-            }
-        }
-        setEditorContent(value)
-    }
-
-    const handleInsertSnippet = (code: string) => {
-        if (editorRef.current) {
-            const position = editorRef.current.getPosition()
-            const lineContent = editorRef.current.getModel().getLineContent(position.lineNumber)
-            const indentation = lineContent.match(/^\s*/)?.[0] || ''
-
-            // Add a newline if we're not at the start of a line
-            const insertText = position.column > 1 ? '\n' + code : code
-
-            // Format the snippet with proper indentation
-            const formattedCode = insertText
-                .split('\n')
-                .map((line, index) => (index === 0 ? line : indentation + line))
-                .join('\n')
-
-            editorRef.current.executeEdits('shell-helper', [
-                {
-                    range: {
-                        startLineNumber: position.lineNumber,
-                        startColumn: position.column,
-                        endLineNumber: position.lineNumber,
-                        endColumn: position.column
-                    },
-                    text: formattedCode
-                }
-            ])
-
-            // Update the content state
-            const newContent = editorRef.current.getValue()
-            setEditorContent(newContent)
-            setValidation(validateShellScript(newContent))
-
-            // Focus back on the editor
-            editorRef.current.focus()
-        }
-    }
-
-    if (!isOpen) return null
-
-    return (
-        <>
-            <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className='max-w-[90vw] h-[80vh]'>
-                    <div className='flex justify-between items-center mb-4'>
-                        <h2 className='text-lg font-medium text-white/90'>{title}</h2>
-                        <button onClick={onClose}>Close</button>
-                    </div>
-
-                    <div className='flex gap-4 h-[calc(100%-60px)]'>
-                        <div className={`${isMainNode ? 'w-full' : 'flex-1'}`}>
-                            <Editor
-                                height='100%'
-                                value={editorContent}
-                                language='shell'
-                                theme='vs-dark'
-                                onChange={handleContentChange}
-                                onMount={handleEditorDidMount}
-                                options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                    lineNumbers: 'on',
-                                    scrollBeyondLastLine: false,
-                                    automaticLayout: true,
-                                    readOnly: false,
-                                    // Add shell-specific suggestions for main node
-                                    suggest: {
-                                        showWords: !isMainNode,
-                                        snippetsPreventQuickSuggestions: isMainNode
-                                    }
-                                }}
-                            />
-                        </div>
-
-                        {!isMainNode && (
-                            <div className='w-[300px]'>
-                                <ShellHelpers onInsertSnippet={handleInsertSnippet} />
-                            </div>
-                        )}
-
-                        {isMainNode && (
-                            <div className='absolute bottom-4 left-4 right-4 bg-[#1E1E1E] p-4 rounded-lg border border-zinc-800'>
-                                <div className='text-sm text-white/70'>
-                                    <h3 className='font-medium mb-2'>Main Configuration File</h3>
-                                    <p className='text-xs text-white/50 mb-2'>
-                                        This file should only contain source statements for your configuration files.
-                                    </p>
-                                    <div className='bg-black/20 p-2 rounded text-xs'>
-                                        <code>source ~/.zsh/core/aliases.sh</code>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {showToast && (
-                <div className="fixed bottom-4 right-4 z-50">
-                    <Toast 
-                        state="initial"
-                        onDismiss={() => setShowToast(false)}
-                        onReset={() => {
-                            setEditorContent(content)
-                            setShowToast(false)
-                        }}
-                    />
+        <div className="grid md:grid-cols-[1fr_250px] divide-x divide-zinc-800" style={{ height: 'calc(100% - 130px)' }}>
+          <div className="h-full flex flex-col">
+            <div className="flex-shrink-0 flex items-center gap-1 p-2 bg-zinc-900/50 border-b border-zinc-800">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={formatCode}
+                className="h-8 px-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+              >
+                <FileCheck className="w-4 h-4 mr-2" />
+                Format
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearCode}
+                className="h-8 px-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copyCode}
+                className="h-8 px-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={pasteCode}
+                className="h-8 px-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+              >
+                <ClipboardPaste className="w-4 h-4 mr-2" />
+                Paste
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0">
+              <Editor
+                height="100%"
+                defaultValue={initialContent}
+                language="shell"
+                theme="vs-dark"
+                onMount={handleEditorDidMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: "on",
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  padding: { top: 8, bottom: 8 },
+                  fontFamily: "'JetBrains Mono', monospace",
+                  renderWhitespace: "boundary",
+                  bracketPairColorization: { enabled: true },
+                  guides: { bracketPairs: true },
+                  folding: true,
+                  foldingHighlight: true,
+                  renderLineHighlight: "all",
+                  suggest: {
+                    showWords: false,
+                    snippetsPreventQuickSuggestions: true,
+                  },
+                }}
+              />
+            </div>
+          </div>
+          <div className="bg-[#1E1E1E] w-full">
+            <ScrollArea className="h-full">
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
+                    <FileCode className="w-4 h-4 text-emerald-400" />
+                    Directory Structure
+                  </div>
+                  <pre className="text-xs p-3 rounded-lg bg-zinc-900 font-mono whitespace-pre text-zinc-300 border border-zinc-800">
+                    {`.zsh/
+├── core/
+│   ├── aliases_injector.sh
+│   └── exports_injector.sh
+├── plugins/
+│   ├── git_injector.sh
+│   └── docker_injector.sh
+└── scripts/
+    └── utils_injector.sh`}
+                  </pre>
                 </div>
-            )}
-        </>
-    )
+
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-zinc-200">About This File</h3>
+                  <ul className="space-y-2 text-sm text-zinc-400">
+                    <li>• Sources all *_injector.sh files recursively</li>
+                    <li>• Validates file existence before sourcing</li>
+                    <li>• Maintains clean configuration structure</li>
+                  </ul>
+                </div>
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+
+        <div className="flex-shrink-0 flex items-center justify-end gap-2 p-3 border-t border-zinc-800 bg-zinc-900/50">
+          <Button variant="ghost" onClick={onClose} className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => onSave(editorRef.current?.getValue())}
+            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+          >
+            Save Changes
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }
+
