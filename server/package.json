@@ -1,7 +1,7 @@
 {
   "name": "zsh-config-server",
   "version": "1.0.0",
-  "description": "OAuth server for ZSH Config Builder",
+  "description": "OAuth server for Shell Config Builder",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn index.ts",
