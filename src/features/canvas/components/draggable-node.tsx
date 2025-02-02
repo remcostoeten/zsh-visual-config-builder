@@ -2,10 +2,7 @@
 import React, { useRef } from 'react'
 import { motion } from 'framer-motion'
 import Draggable, { DraggableData, DraggableEvent } from 'react-draggable'
-import { File, Edit2, Link, Trash2, Pencil } from 'lucide-react'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { useToast } from "../../../components/ui/toast"
+import { File, Edit2, Link, Trash2, FileCode, GitFork } from 'lucide-react'
 
 import MonacoEditorModal from './monaco-editor'
 import { useCanvasStore } from '../canvas-slice'
@@ -18,6 +15,7 @@ interface Props {
     onPositionChange: (id: string, position: Position) => void
     onDrag: (id: string, position: Position) => void
     onLink?: (id: string) => void
+    onFinishLinking: (targetId: string) => void
 }
 
 export function DraggableNode({
@@ -33,7 +31,6 @@ export function DraggableNode({
     const { linkingNode, finishLinking, removeNode } = useCanvasStore()
     const nodeRef = useRef<HTMLDivElement>(null)
     const setNodePosition = useCanvasStore(state => state.setNodePosition)
-    const { addToast } = useToast()
 
     // const sourceFiles = node.content.match(/source.*\.sh/g) || [];
     // const isLinking = linkingNode !== null;
@@ -70,19 +67,28 @@ export function DraggableNode({
     const handleNodeClick = (e: React.MouseEvent) => {
         e.stopPropagation()
         if (linkingNode && linkingNode.id !== node.id) {
-            const sourceNode = useCanvasStore.getState().nodes[linkingNode.id]
+            const sourceNode = useCanvasStore.getState().nodes.find(n => n.id === linkingNode.id)
             
+            if (!sourceNode) return
+
             // Check linking rules
             if (sourceNode.type === 'injector' && node.type !== 'partial') {
-                addToast('Injectors can only source partial nodes', 'error')
+                toast({
+                    description: "Injectors can only source partial nodes",
+                    variant: "destructive"
+                })
                 return
             }
             if (node.type === 'partial' && sourceNode.type !== 'injector') {
-                addToast('Partials can only be linked to injector nodes', 'error')
+                toast({
+                    title: "Error",
+                    description: "Partials can only be linked to injector nodes",
+                    variant: "destructive"
+                })
                 return
             }
 
-            finishLinking(node.id)
+            finishLinking()
         }
     }
 
@@ -103,48 +109,44 @@ export function DraggableNode({
                     content: '',
                     title: 'main',
                     level: 0,
-                    connections: []
+                    connections: [],
+                    main: ['zshrc', 'injector', 'partial'] as const
                 }
                 updateSourceCommands(mainConfig, newTitle)
             }
         }
     }
 
-    // Add this new function to determine if shell helpers should be disabled
-    const isShellHelpersDisabled = node.type === 'main'
-
-    const handleDoubleClick = () => {
-        setIsEditing(true)
+    const handleDoubleClick = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        setShowEditor(true)
     }
 
-    const previewContent = node.content ? (
-        <div className="max-h-[24px] overflow-hidden text-xs">
-            <SyntaxHighlighter
-                language="bash"
-                style={vscDarkPlus}
-                customStyle={{
-                    margin: 0,
-                    padding: '2px 4px',
-                    background: 'transparent',
-                    fontSize: '11px',
-                }}
-            >
-                {node.content.split('\n')[0]}
-            </SyntaxHighlighter>
-        </div>
-    ) : (
-        <div className="flex items-center gap-1 text-zinc-400 text-xs">
-            <Pencil size={12} />
-            Edit Contents
-        </div>
-    )
+    const getPreviewContent = (content: string) => {
+        const lines = content.split('\n')
+        // Always show shebang line if it exists
+        if (lines[0]?.startsWith('#!')) {
+            return lines[0]
+        }
+        // Otherwise find first non-empty, non-comment line
+        const previewLine = lines.find(line => 
+            line.trim() && !line.trim().startsWith('#')
+        ) || lines[0] || ''
+        
+        return previewLine.length > 40 ? 
+            previewLine.slice(0, 37) + '...' : 
+            previewLine
+    }
 
     // Only show link button for injectors
     const showLinkButton = node.type === 'injector'
 
     const handleDelete = () => {
         removeNode(node.id)
-        addToast('Node deleted successfully', 'success')
+        toast({
+            title: "Success",
+            description: "Node deleted successfully"
+        })
     }
 
     return (
@@ -163,6 +165,7 @@ export function DraggableNode({
                     data-node-id={node.id}
                     data-node-type={node.type}
                     onClick={handleNodeClick}
+                    onDoubleClick={handleDoubleClick}
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -171,11 +174,11 @@ export function DraggableNode({
                     >
                         <div className='drag-handle flex items-center justify-between px-3 py-2 border-b border-white/5 cursor-move'>
                             <div className='flex items-center gap-2'>
-                                <div className='flex items-center justify-center w-4 h-4 rounded-sm bg-white/[0.06] border border-white/10'>
-                                    <span className='text-[10px] text-white/50 font-mono'>
-                                        {node.level}
-                                    </span>
-                                </div>
+                                {node.type === 'injector' ? (
+                                    <GitFork className="w-4 h-4 text-emerald-400" />
+                                ) : node.type === 'partial' ? (
+                                    <FileCode className="w-4 h-4 text-zinc-400" />
+                                ) : null}
                                 {isEditing ? (
                                     <input
                                         type='text'
@@ -229,7 +232,9 @@ export function DraggableNode({
                         >
                             <div className='flex items-center gap-2 text-white/40 group-hover:text-white/70'>
                                 <File className='w-3.5 h-3.5' />
-                                {previewContent}
+                                <code className="px-2 py-1 text-xs font-mono bg-black/20 rounded border border-zinc-800 text-emerald-400 overflow-hidden whitespace-nowrap">
+                                    {getPreviewContent(node.content)}
+                                </code>
                             </div>
                         </button>
                     </motion.div>
@@ -237,16 +242,15 @@ export function DraggableNode({
             </Draggable>
 
             <MonacoEditorModal
-                isOpen={isEditing}
-                onClose={() => setIsEditing(false)}
+                isOpen={showEditor}
+                onClose={() => setShowEditor(false)}
                 title={node.title}
                 content={node.content}
                 onSave={content => {
                     onUpdate(node.id, { content })
-                    setIsEditing(false)
+                    setShowEditor(false)
                 }}
-                disableShellHelpers={isShellHelpersDisabled}
-                isMainNode={node.type === 'main'}
+                node={node}
             />
         </>
     )

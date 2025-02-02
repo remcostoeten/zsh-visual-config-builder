@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Terminal, ArrowRight, GitBranch, Code, Plus, FolderTree } from 'lucide-react'
 import { useCanvasStore } from '../canvas-slice'
 import { AsciiTree } from '../../../components/ascii-tree'
-import { ShellWizard } from './shell-wizard'
+import { Button } from '@/shared/components/ui/button'
 
 const exampleStructure = {
     name: '.zshrc',
@@ -45,69 +45,87 @@ const exampleStructure = {
     ]
 }
 
-export function EmptyState() {
-    return (
-        <div className="w-full h-full overflow-auto">
-            <div className="max-w-6xl mx-auto p-8">
-                <div className="grid grid-cols-2 gap-12">
-                    {/* Left side: Introduction and visualization */}
-                    <motion.div 
-                        className="space-y-8"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                    >
-                        <div className="space-y-4">
-                            <h1 className="text-4xl font-bold text-white">
-                                Shell Config Builder
-                            </h1>
-                            <p className="text-lg text-zinc-400">
-                                Create a modular, maintainable shell configuration with a visual editor.
-                                Split your monolithic config into focused, reusable modules.
-                            </p>
-                        </div>
+interface Props {
+    onStartClick: () => void
+}
 
+export function EmptyState({ onStartClick }: Props) {
+    return (
+        <div className="h-full flex items-center justify-center">
+            <div className="max-w-4xl w-full p-8">
+                <motion.div 
+                    className="space-y-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                >
+                    <div className="space-y-4">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                            Shell Config Builder
+                        </h1>
+                        <p className="text-zinc-400 max-w-lg">
+                            Create a modular, maintainable shell configuration with a visual editor. 
+                            Split your monolithic config into focused, reusable modules.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8">
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 text-white">
                                 <FolderTree className="w-5 h-5 text-indigo-400" />
-                                <h2 className="text-lg font-medium text-white">Example Structure</h2>
+                                <h2 className="font-medium">Example Structure</h2>
                             </div>
                             
                             <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
                                 <AsciiTree tree={exampleStructure} />
                             </div>
+                        </div>
 
+                        <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-zinc-300">
-                                        <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                                        <span>Modular Organization</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                        <span className="text-sm text-zinc-400">Main Config</span>
                                     </div>
-                                    <p className="text-sm text-zinc-500 pl-4">
-                                        Split your config into logical modules
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                                        <span className="text-sm text-zinc-400">Folders</span>
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-zinc-300">
-                                        <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                                        <span>Visual Editor</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-400" />
+                                        <span className="text-sm text-zinc-400">Injectors</span>
                                     </div>
-                                    <p className="text-sm text-zinc-500 pl-4">
-                                        Drag & drop interface with live preview
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-purple-400" />
+                                        <span className="text-sm text-zinc-400">Partials</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </motion.div>
 
-                    {/* Right side: Shell Wizard */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        <ShellWizard onClose={() => {}} />
-                    </motion.div>
-                </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Terminal className="w-4 h-4 text-emerald-400" />
+                                    <h3 className="text-white font-medium">Getting Started</h3>
+                                </div>
+                                <ul className="space-y-2 text-sm text-zinc-400">
+                                    <li>• Choose your preferred shell (ZSH, Bash, Fish)</li>
+                                    <li>• Start with a template or empty config</li>
+                                    <li>• Add modules using the visual editor</li>
+                                    <li>• Export your configuration when ready</li>
+                                </ul>
+                            </div>
+
+                            <Button 
+                                onClick={onStartClick}
+                                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
+                            >
+                                Create New Configuration
+                            </Button>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         </div>
     )
