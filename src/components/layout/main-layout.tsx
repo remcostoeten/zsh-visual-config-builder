@@ -1,26 +1,49 @@
-import { Header } from '../header'
-import Footer from '../footer'
-import { motion, AnimatePresence } from 'framer-motion'
+import { ReactNode } from 'react'
+import { AuthButton } from '@/components/auth-button'
+import { Introduction } from '@/components/introduction'
+import { useCanvasStore } from '@/features/canvas/canvas-slice'
+import { ConfigNode } from '@/types/config'
+import { Header } from '@/components/header'
+import { TooltipProvider } from '@/shared/components/ui'
 
-interface MainLayoutProps {
-    children: React.ReactNode
+interface Props {
+    children: ReactNode
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function MainLayout({ children }: Props) {
+    // Get required actions from canvas store
+    const { 
+        setConfig, 
+        saveConfig,
+        config: currentConfig 
+    } = useCanvasStore()
+
+    // Handler functions for Introduction component
+    const handleTemplateSelect = (template: ConfigNode) => {
+        setConfig([template])
+    }
+
+    const handleSaveConfig = () => {
+        saveConfig()
+    }
+
+    const handleLoadConfig = (config: ConfigNode) => {
+        setConfig([config])
+    }
+
     return (
-        <div className="flex flex-col min-h-screen bg-[#1A1A1A]">
-            <Header />
-            <AnimatePresence mode="wait">
-                <motion.main 
-                    className="flex-1 flex flex-col px-3 py-2"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                >
-                    {children}
-                </motion.main>
-            </AnimatePresence>
-            <Footer />
-        </div>
+        <TooltipProvider delayDuration={100}>
+            <div className="min-h-screen bg-[#1A1A1A]">
+                <Header />
+            
+                    <Introduction 
+                    onTemplateSelect={handleTemplateSelect}
+                    onSaveConfig={handleSaveConfig}
+                    onLoadConfig={handleLoadConfig}
+                    currentConfig={currentConfig}
+                />
+                <main>{children}</main>
+            </div>
+        </TooltipProvider>
     )
 } 

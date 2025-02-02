@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.content :not(.code-block):not(.code-block *) {
+    font-size: 12px;
+}
+
 @layer base {
     :root {
         --animation-duration: 300ms;
@@ -223,4 +227,21 @@
     html {
         scroll-behavior: smooth;
     }
+}
+
+.code-block-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    padding: 1rem;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    border: 1px dashed var(--border-color);
+}
+
+.code-block-empty-state p {
+    color: var(--text-muted);
+    text-align: center;
+    font-size: 0.9rem;
 }
