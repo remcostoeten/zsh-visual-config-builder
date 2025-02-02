@@ -92,7 +92,8 @@ function AppContent() {
                             <Canvas />
                             <PathConfig />
                         </div>
-                        {!isZenMode && <Footer />}
+                        <Footer />
+                        {/* {!isZenMode && <Footer />} */}
                         <FeaturePromoBanner />
                     </div>
                 }

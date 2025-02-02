@@ -1,5 +1,5 @@
 import React from 'react'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/shared/components/ui/dialog'
 import { Task } from '../roadmap-slice'
 
 interface Props {
@@ -35,7 +35,7 @@ export default function TaskDialog({ open, onClose, onSave, initialData }: Props
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent>
-                <DialogTitle>{initialData ? 'Edit Task' : 'New Task'}</DialogTitle>
+                <h2>{initialData ? 'Edit Task' : 'New Task'}</h2>
 
                 <form onSubmit={handleSubmit} className='space-y-4'>
                     <div>

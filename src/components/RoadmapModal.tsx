@@ -1,6 +1,6 @@
 import React from 'react'
-import { Dialog, DialogContent, DialogTitle, DialogClose } from './ui/dialog'
-import { Button } from './ui/button'
+import { Dialog, DialogContent, DialogClose } from '@/shared/components/ui/dialog'
+import { Button } from '@/shared/components/ui/button'
 import { Lightbulb, Zap, Gauge, Sparkles } from 'lucide-react'
 
 interface RoadmapItem {
@@ -49,10 +49,10 @@ export function RoadmapModal({ isOpen, onClose }: Props) {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
-                <DialogTitle className='text-xl font-semibold text-white flex items-center gap-2'>
+                <h2 className='text-xl font-semibold text-white flex items-center gap-2'>
                     <Lightbulb className='w-5 h-5 text-yellow-500' />
                     Development Roadmap
-                </DialogTitle>
+                </h2>  
                 <div className='space-y-6'>
                     <p className='text-gray-400 text-sm mt-1'>
                         Upcoming features and improvements planned for the Shell Config Editor

@@ -1,9 +1,10 @@
 import React from 'react'
 import Editor from '@monaco-editor/react'
 import { FileCode } from 'lucide-react'
-import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
+import { Dialog, DialogContent } from '@/shared/components/ui'
 import ShellHelpers from './ShellHelpers'
 import { Button } from './ui/button'
+import { DialogTitle } from '@radix-ui/react-dialog'
 
 interface Props {
     isOpen: boolean
@@ -31,25 +32,27 @@ export default function MonacoEditorModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className='sm:max-w-[90vw] h-[80vh]'>
-                <DialogHeader>
-                    <DialogTitle className='flex items-center gap-2'>
-                        <FileCode className='w-4 h-4' />
+            <DialogContent className="w-full max-w-[80vw] h-[85vh] max-h-[900px] p-4 bg-[#1E1E1E] border-zinc-800 overflow-hidden flex flex-col">
+                <div className="flex-shrink-0 mb-4">
+                    <DialogTitle className="flex items-center gap-2 text-zinc-200">
+                        <FileCode className="w-4 h-4" />
                         {title}
                         {isMainNode && (
-                            <span className='text-xs text-gray-400 font-normal'>
+                            <span className="text-xs text-zinc-400 font-normal">
                                 (Source files and configuration only)
                             </span>
                         )}
                     </DialogTitle>
-                </DialogHeader>
+                </div>
 
-                <div className='grid grid-cols-[1fr,300px] gap-4 h-full'>
-                    <div className='relative h-full'>
+                <div className="flex-1 min-h-0 grid grid-cols-[1fr_300px] gap-4 w-full">
+                    <div className="h-full w-full relative rounded-lg overflow-hidden border border-zinc-800">
                         <Editor
                             value={editedContent}
                             onChange={value => setEditedContent(value || '')}
-                            language='shell'
+                            language="shell"
+                            theme="vs-dark"
+                            height="100%"
                             options={{
                                 minimap: { enabled: false },
                                 fontSize: 13,
@@ -81,14 +84,16 @@ export default function MonacoEditorModal({
                                               })
                                           }
                                       }
-                                    : undefined
+                                    : undefined,
+                                automaticLayout: true,
+                                padding: { top: 8, bottom: 8 },
                             }}
                         />
                     </div>
 
-                    <div className='h-full overflow-y-auto'>
+                    <div className="h-full w-full overflow-hidden rounded-lg border border-zinc-800">
                         {isMainNode ? (
-                            <div className='p-4 bg-[#1E1E1E] rounded-lg'>
+                            <div className="h-full overflow-y-auto p-4">
                                 <h3 className='text-sm font-medium text-white/80 mb-2'>
                                     Main Configuration
                                 </h3>
@@ -110,7 +115,7 @@ export default function MonacoEditorModal({
                                 </div>
                             </div>
                         ) : (
-                            <div className='h-full'>
+                            <div className="h-full">
                                 <ShellHelpers
                                     onInsertSnippet={snippet => {
                                         setEditedContent(prev => prev + '\n' + snippet)
@@ -121,12 +126,21 @@ export default function MonacoEditorModal({
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant='outline' onClick={onClose}>
+                <div className="flex-shrink-0 flex items-center justify-end gap-2 mt-4">
+                    <Button 
+                        variant="ghost" 
+                        onClick={onClose}
+                        className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                    >
                         Cancel
                     </Button>
-                    <Button onClick={() => onSave(editedContent)}>Save Changes</Button>
-                </DialogFooter>
+                    <Button 
+                        onClick={() => onSave(editedContent)}
+                        className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                    >
+                        Save Changes
+                    </Button>
+                </div>
             </DialogContent>
         </Dialog>
     )

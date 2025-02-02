@@ -1,10 +1,14 @@
-"use client"
-
 import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useOnClickOutside } from "usehooks-ts"
 import { cn } from "@/lib/utils"
 import type { LucideIcon } from "lucide-react"
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/shared/components/ui"
 
 interface Tab {
   title: string
@@ -92,46 +96,54 @@ export function ExpandableTabs({ tabs, className, onChange }: ExpandableTabsProp
         className,
       )}
     >
-      {tabs.map((tab, index) => {
-        if (tab.type === "separator") {
-          return <Separator key={`separator-${index}`} />
-        }
+      <TooltipProvider>
+        {tabs.map((tab, index) => {
+          if (tab.type === "separator") {
+            return <Separator key={`separator-${index}`} />
+          }
 
-        const Icon = tab.icon
-        const isActive = tab.isActive || selected === index
-        
-        return (
-          <motion.button
-            key={tab.title}
-            variants={buttonVariants}
-            initial="initial"
-            animate="animate"
-            custom={isActive}
-            onClick={() => handleSelect(index, tab.action)}
-            className={cn(
-              "relative flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-colors duration-300",
-              isActive 
-                ? "bg-zinc-800 text-white" 
-                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200",
-            )}
-          >
-            <Icon size={18} className="flex-shrink-0" />
-            <AnimatePresence initial={false}>
-              {(isActive || selected === index) && (
-                <motion.span
-                  variants={spanVariants}
+          const Icon = tab.icon
+          const isActive = tab.isActive || selected === index
+          
+          return (
+            <Tooltip key={tab.title}>
+              <TooltipTrigger asChild>
+                <motion.button
+                  variants={buttonVariants}
                   initial="initial"
                   animate="animate"
-                  exit="exit"
-                  className="ml-2 overflow-hidden whitespace-nowrap"
+                  custom={isActive}
+                  onClick={() => handleSelect(index, tab.action)}
+                  className={cn(
+                    "relative flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-colors duration-300",
+                    isActive 
+                      ? "bg-zinc-800 text-white" 
+                      : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200",
+                  )}
                 >
-                  {tab.title}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        )
-      })}
+                  <Icon size={18} className="flex-shrink-0" />
+                  <AnimatePresence initial={false}>
+                    {(isActive || selected === index) && (
+                      <motion.span
+                        variants={spanVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="ml-2 overflow-hidden whitespace-nowrap"
+                      >
+                        {tab.title}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {tab.title}
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </TooltipProvider>
     </div>
   )
 } 
