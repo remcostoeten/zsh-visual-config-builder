@@ -2,7 +2,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { User, LogOut, FileJson, Settings, ChevronDown } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "../features/auth/github-auth"
-
+import { GistList } from "@/features/persistence/components/gist-list"
+import { Dialog, DialogContent, DialogTrigger } from "@/shared/components/ui"
 export function UserMenu() {
     const [isOpen, setIsOpen] = useState(false)
     const { logout } = useAuthStore()
@@ -41,13 +42,17 @@ export function UserMenu() {
                                 </div>
                                 
                                 <div className="py-2">
-                                    <button
-                                        onClick={() => {/* TODO: Implement gist view */}}
-                                        className="w-full flex items-center gap-2 px-2 py-2 text-sm text-zinc-400 hover:text-white/90 hover:bg-white/[0.06] rounded transition-colors"
-                                    >
-                                        <FileJson className="w-4 h-4" />
-                                        My Saved Configs
-                                    </button>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <button className="w-full flex items-center gap-2 px-2 py-2 text-sm text-zinc-400 hover:text-white/90 hover:bg-white/[0.06] rounded transition-colors">
+                                                <FileJson className="w-4 h-4" />
+                                                My Saved Configs
+                                            </button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[500px]">
+                                            <GistList />
+                                        </DialogContent>
+                                    </Dialog>
                                     
                                     <button
                                         onClick={() => {/* TODO: Implement settings */}}

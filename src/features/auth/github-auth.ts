@@ -2,23 +2,16 @@ import { create } from 'zustand'
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || ''
 const GITHUB_REDIRECT_URI =
-    import.meta.env.DEV
-        ? 'http://localhost:5173/auth/callback'
-        : `https://${import.meta.env.VITE_VERCEL_URL}/auth/callback`
+    process.env.NODE_ENV === 'development'
+        ? 'http://localhost:5173/auth/callback' // Vite's default port
+        : 'https://your-production-domain.com/auth/callback'
 
 const API_URL =
-    import.meta.env.DEV
-        ? 'http://localhost:3001'
-        : import.meta.env.VITE_API_URL
+    import.meta.env.MODE === 'development' ? 'http://localhost:3001' : 'https://your-api-domain.com'
 
 interface AuthState {
     token: string | null
-    user: {
-        login: string
-        name: string | null
-        email: string | null
-        avatar_url: string
-    } | null
+    username: string | null
     isAuthenticated: boolean
     login: () => void
     logout: () => void
@@ -27,7 +20,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>(set => ({
     token: localStorage.getItem('gh_token'),
-    user: localStorage.getItem('gh_user') ? JSON.parse(localStorage.getItem('gh_user')!) : null,
+    username: localStorage.getItem('gh_username'),
     isAuthenticated: !!localStorage.getItem('gh_token'),
 
     login: () => {
@@ -41,8 +34,8 @@ export const useAuthStore = create<AuthState>(set => ({
 
     logout: () => {
         localStorage.removeItem('gh_token')
-        localStorage.removeItem('gh_user')
-        set({ token: null, user: null, isAuthenticated: false })
+        localStorage.removeItem('gh_username')
+        set({ token: null, username: null, isAuthenticated: false })
     },
 
     handleAuthCallback: async (code: string) => {
@@ -57,16 +50,11 @@ export const useAuthStore = create<AuthState>(set => ({
             const { access_token, username } = await response.json()
 
             localStorage.setItem('gh_token', access_token)
-            localStorage.setItem('gh_user', JSON.stringify({ login: username }))
+            localStorage.setItem('gh_username', username)
 
             set({
                 token: access_token,
-                user: {
-                    login: username,
-                    name: null,
-                    email: null,
-                    avatar_url: ''
-                },
+                username,
                 isAuthenticated: true
             })
         } catch (error) {

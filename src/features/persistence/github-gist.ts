@@ -10,6 +10,15 @@ interface Gist {
 
 export const githubGistService = {
     async saveConfig(config: unknown, token: string) {
+        if (!token) {
+            throw new Error('Authentication token required')
+        }
+
+        // Validate config is not empty
+        if (!config || typeof config !== 'object' || Object.keys(config).length === 0) {
+            throw new Error('Cannot save empty configuration')
+        }
+
         const gist: Gist = {
             description: 'Shell Config Builder configuration',
             public: false,
@@ -29,6 +38,10 @@ export const githubGistService = {
                 },
                 body: JSON.stringify(gist)
             })
+
+            if (!response.ok) {
+                throw new Error('Failed to save gist: ' + response.statusText)
+            }
 
             const data = await response.json()
             return data.id
@@ -68,5 +81,55 @@ export const githubGistService = {
             console.error('Failed to list gists:', error)
             return []
         }
+    },
+
+    async deleteGist(gistId: string, token: string): Promise<void> {
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        })
+
+        if (!response.ok) {
+            throw new Error('Failed to delete gist')
+        }
+    },
+
+    async updateGistDescription(
+        gistId: string, 
+        description: string, 
+        token: string
+    ): Promise<void> {
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                description,
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error('Failed to update gist')
+        }
+    },
+
+    async viewGistContent(gistId: string, token: string): Promise<any> {
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        })
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch gist content')
+        }
+
+        return response.json()
     }
 }
