@@ -71,14 +71,17 @@ export function FeaturePromoBanner({
     if (!isVisible) return null
 
     return (
-        <div className={cn('fixed bottom-4 left-1/2 -translate-x-1/2 z-50', className)}>
+        <div className={cn('fixed bottom-16 left-1/2 -translate-x-1/2 z-50 animate-pulse', className)}>
             <AnimatePresence>
                 <motion.div
                     className='relative'
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4 }}
+                    transition={{ 
+                        duration: 0.4,
+                        delay: 2 // Add 2s delay before fading in
+                    }}
                 >
                     <motion.div
                         initial='hidden'
@@ -87,7 +90,7 @@ export function FeaturePromoBanner({
                         custom={{ x: -10, y: -10 }}
                         className='pointer-events-none absolute left-[4px] top-[2px]'
                     >
-                        <SettingsFilled className='text-gray-600 dark:text-gray-400' />
+                        <SettingsFilled className='text-zinc-600 dark:text-zinc-400' />
                     </motion.div>
                     <motion.div
                         initial='hidden'
@@ -96,25 +99,25 @@ export function FeaturePromoBanner({
                         custom={{ x: 10, y: 10 }}
                         className='pointer-events-none absolute bottom-[2px] left-[6rem]'
                     >
-                        <SettingsFilled className='text-gray-600 dark:text-gray-400' />
+                        <SettingsFilled className='text-zinc-600 dark:text-zinc-400' />
                     </motion.div>
-                    <div className='relative flex h-[35px] items-center gap-1 rounded-[6px] border border-promo-secondary bg-white/50 pl-2.5 pr-1 text-sm shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/90'>
+                    <div className='relative flex h-[35px] items-center gap-1 rounded-[6px] border border-zinc-300 bg-white/50 pl-2.5 pr-1 text-sm shadow-lg backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-800/90'>
                         <button
-                            className='focus-visible:shadow-focus-ring rounded-xs my-[-1px] cursor-pointer border-none bg-transparent px-0 py-1 font-sans text-[13px] font-medium text-promo-primary underline decoration-promo-secondary underline-offset-[5px] outline-none hover:text-promo-primary/80 hover:decoration-promo-primary/30 focus-visible:!shadow-promo-primary/50 dark:text-promo-secondary dark:decoration-gray-700 dark:hover:text-promo-secondary/80'
+                            className='focus-visible:shadow-focus-ring rounded-xs my-[-1px] cursor-pointer border-none bg-transparent px-0 py-1 font-sans text-[13px] font-medium text-zinc-800 underline decoration-zinc-400 underline-offset-[5px] outline-none hover:text-zinc-600 hover:decoration-zinc-300 focus-visible:!shadow-zinc-400/50 dark:text-zinc-300 dark:decoration-zinc-600 dark:hover:text-zinc-400'
                             onMouseEnter={() => setIsHovered(true)}
                             onMouseLeave={() => setIsHovered(false)}
                             onClick={onClick}
                         >
                             {buttonText}
                         </button>
-                        <span className='text-[0.8125rem] text-gray-600 dark:text-gray-400'>
+                        <span className='text-[0.8125rem] text-zinc-600 dark:text-zinc-400'>
                             {description}
                         </span>
                         <button
                             onClick={handleClose}
-                            className='m-0 flex h-6 !w-6 shrink-0 cursor-pointer items-center justify-center rounded-[4px] border-0 bg-transparent p-0 text-gray-600 hover:bg-promo-secondary/20 dark:text-gray-400 dark:hover:bg-gray-700'
+                            className='m-0 flex h-6 !w-6 shrink-0 cursor-pointer items-center justify-center rounded-[4px] border-0 bg-transparent p-0 text-zinc-600 hover:bg-zinc-200/20 dark:text-zinc-400 dark:hover:bg-zinc-700'
                         >
-                            <X size={16} className='text-gray-600 dark:text-gray-400' />
+                            <X size={16} className='text-zinc-600 dark:text-zinc-400' />
                         </button>
                     </div>
                 </motion.div>

@@ -5,9 +5,12 @@ import { AnimatedConnector } from './animated-connector'
 import { X, FlipHorizontal2, FlipVertical2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useSettingsStore } from '../../settings/settings-slice'
-import QuickAddMenu from './quick-add-menu'
+import { QuickAddMenu } from './quick-add-menu'
 import { ZenModeToolbar } from '../../../components/ZenModeToolbar'
-import { ConfigNode, NodeType, Position as CanvasPosition } from '../../../types/config'
+import { ConfigNode,  Position as CanvasPosition } from '../../../types/config'
+import { EmptyState } from './empty-state'
+import { ShellWizard } from './shell-wizard'
+import { Dialog, DialogContent } from '../../../components/ui/dialog'
 
 export function Canvas() {
     const {
@@ -29,6 +32,16 @@ export function Canvas() {
     const { settings } = useSettingsStore()
     const canvasRef = React.useRef<HTMLDivElement>(null)
     const [, setShowHint] = React.useState(true)
+    const [showWizard, setShowWizard] = useState(false)
+
+    const nodes = useCanvasStore(state => state.nodes)
+    const hasAnyNodes = nodes.length > 0
+
+    useEffect(() => {
+        if (!hasAnyNodes) {
+            setShowWizard(true)
+        }
+    }, [hasAnyNodes])
 
     // Hide hint when first node is added
     React.useEffect(() => {
@@ -60,9 +73,13 @@ export function Canvas() {
     const handleDoubleClick = (e: React.MouseEvent) => {
         if (e.target === canvasRef.current) {
             const rect = canvasRef.current.getBoundingClientRect()
+            const x = e.clientX - rect.left + canvasRef.current.scrollLeft
+            const y = e.clientY - rect.top + canvasRef.current.scrollTop
+            
+            // Set position immediately and don't update it
             setQuickAddPosition({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
+                x: Math.round(x),
+                y: Math.round(y)
             })
         }
     }
@@ -118,131 +135,110 @@ export function Canvas() {
 
     const children = config.children || []
 
+    const hasNodes = Object.keys(positions).length > 0 || children.length > 0
+
+    const handleQuickAddSelect = (type: 'injector' | 'partial') => {
+        if (!quickAddPosition) return
+        
+        addNode(type, quickAddPosition)
+        setQuickAddPosition(null) // Clear the position after adding node
+    }
+
     return (
-        <motion.div
-            className='relative min-h-[calc(100vh-12rem)] w-full bg-[#1A1A1A]'
-            style={{
-                backgroundImage: `
-                    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0),
-                    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
-                `,
-                backgroundSize: '24px 24px, 24px 24px, 24px 24px',
-                backgroundPosition: '-0.5px -0.5px'
-            }}
-            initial={false}
-            animate={
-                isZenMode
-                    ? {
-                          position: 'fixed',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          zIndex: 50,
-                          backgroundColor: '#1A1A1A'
-                      }
-                    : {
-                          position: 'relative',
-                          top: 'auto',
-                          left: 'auto',
-                          right: 'auto',
-                          bottom: 'auto',
-                          zIndex: 1,
-                          backgroundColor: 'transparent'
-                      }
-            }
-        >
-            <div
-                ref={canvasRef}
-                className={`relative w-full h-full bg-[#1E1E1E] rounded-lg overflow-hidden border border-[#333] transition-transform duration-500 ${getOrientationStyles()}`}
-                onClick={handleCanvasClick}
-                onDoubleClick={handleDoubleClick}
-                onContextMenu={handleContextMenu}
-                style={{ minHeight: '600px' }}
+        <>
+            <motion.div 
+                className="flex-1 flex flex-col relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
             >
-                {renderConnectors(config)}
-
-                {Object.entries(positions).map(([id, position]: [string, CanvasPosition]) => {
-                    const findNode = (node: ConfigNode): ConfigNode | null => {
-                        if (node.id === id) return node
-                        if (node.children) {
-                            for (const child of node.children) {
-                                const found = findNode(child)
-                                if (found) return found
-                            }
-                        }
-                        return null
-                    }
-
-                    const node = findNode(config)
-                    if (!node) return null
-
-                    return (
-                        <DraggableNode
-                            key={id}
-                            node={node}
-                            onUpdate={updateNode}
-                            onPositionChange={(id: string, pos: CanvasPosition) =>
-                                updateNodePosition(id, pos.x, pos.y)
-                            }
-                            onDrag={(id: string, pos: CanvasPosition) =>
-                                updateNodePosition(id, pos.x, pos.y)
-                            }
-                            position={position}
-                        />
-                    )
-                })}
-
-                {quickAddPosition && (
-                    <QuickAddMenu
-                        position={quickAddPosition}
-                        onSelect={(type: 'injector' | 'partial') => {
-                            addNode(type)
-                            setQuickAddPosition(null)
-                        }}
-                        onClose={() => setQuickAddPosition(null)}
-                    />
-                )}
-
-                {linkingNode && (
-                    <div className='fixed inset-0 bg-black/50 z-40'>
-                        <div className='absolute top-4 left-1/2 -translate-x-1/2 bg-[#252525] text-white px-4 py-2 rounded-lg flex items-center gap-2'>
-                            <span>Select a node to link or</span>
-                            <button
-                                onClick={cancelLinking}
-                                className='flex items-center gap-1 text-red-400 hover:text-red-300'
-                            >
-                                <X className='w-4 h-4' />
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                <button
-                    onClick={cycleOrientation}
-                    className='absolute bottom-4 right-4 p-2 bg-[#252525] rounded-lg text-gray-400 hover:text-white transition-colors z-10'
-                    title={`Flip ${orientation === 'normal' ? 'Horizontal' : orientation === 'horizontal' ? 'Vertical' : 'Normal'}`}
+                <div
+                    ref={canvasRef}
+                    className={`absolute inset-0 bg-[#1E1E1E] rounded-md overflow-auto custom-scrollbar border border-[#333] m-2 transition-transform duration-500 ${getOrientationStyles()}`}
+                    onClick={handleCanvasClick}
+                    onDoubleClick={handleDoubleClick}
+                    onContextMenu={handleContextMenu}
                 >
-                    {getOrientationIcon()}
-                </button>
-            </div>
+                    {!hasAnyNodes ? (
+                        <EmptyState />
+                    ) : (
+                        <>
+                            {renderConnectors(config)}
 
-            {children.length === 0 && (
-                <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
-                    <div className='text-center'>
-                        <h3 className='text-lg font-medium text-white/80 mb-2'>
-                            Start Building Your Config
-                        </h3>
-                        <p className='text-sm text-white/50'>
-                            Choose a template above or double-click anywhere to add a node
-                        </p>
-                    </div>
+                            {Object.entries(positions).map(([id, position]: [string, CanvasPosition]) => {
+                                const findNode = (node: ConfigNode): ConfigNode | null => {
+                                    if (node.id === id) return node
+                                    if (node.children) {
+                                        for (const child of node.children) {
+                                            const found = findNode(child)
+                                            if (found) return found
+                                        }
+                                    }
+                                    return null
+                                }
+
+                                const node = findNode(config)
+                                if (!node) return null
+
+                                return (
+                                    <DraggableNode
+                                        key={id}
+                                        node={node}
+                                        onUpdate={updateNode}
+                                        onPositionChange={(id: string, pos: CanvasPosition) =>
+                                            updateNodePosition(id, pos.x, pos.y)
+                                        }
+                                        onDrag={(id: string, pos: CanvasPosition) =>
+                                            updateNodePosition(id, pos.x, pos.y)
+                                        }
+                                        position={position}
+                                    />
+                                )
+                            })}
+
+                            {quickAddPosition && (
+                                <QuickAddMenu
+                                    position={quickAddPosition}
+                                    onSelect={handleQuickAddSelect}
+                                    onClose={() => setQuickAddPosition(null)}
+                                />
+                            )}
+
+                            {linkingNode && (
+                                <div className='fixed inset-0 bg-black/50 z-40'>
+                                    <div className='absolute top-4 left-1/2 -translate-x-1/2 bg-[#252525] text-white px-4 py-2 rounded-lg flex items-center gap-2'>
+                                        <span>Select a node to link or</span>
+                                        <button
+                                            onClick={cancelLinking}
+                                            className='flex items-center gap-1 text-red-400 hover:text-red-300'
+                                        >
+                                            <X className='w-4 h-4' />
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={cycleOrientation}
+                                className='absolute bottom-4 right-4 p-2 bg-[#252525] rounded-lg text-gray-400 hover:text-white transition-colors z-10'
+                                title={`Flip ${orientation === 'normal' ? 'Horizontal' : orientation === 'horizontal' ? 'Vertical' : 'Normal'}`}
+                            >
+                                {getOrientationIcon()}
+                            </button>
+                        </>
+                    )}
                 </div>
-            )}
 
-            {isZenMode && <ZenModeToolbar />}
-        </motion.div>
+                {isZenMode && <ZenModeToolbar />}
+            </motion.div>
+
+            {showWizard && (
+                <Dialog open={showWizard} onOpenChange={setShowWizard}>
+                    <DialogContent>
+                        <ShellWizard onClose={() => setShowWizard(false)} />
+                    </DialogContent>
+                </Dialog>
+            )}
+        </>
     )
 }

@@ -6,10 +6,10 @@ const createTemplate = (nodes: Partial<ConfigNode>[]): ConfigNode => ({
     title: '.zshrc',
     type: 'main',
     level: 0,
-    content: `# ZSH Configuration
-# Generated with ZSH Config Builder
+    content: `# Shell Configuration
+# Generated with Shell Config Builder
 
-# Create ZSH config directory structure
+# Create Shell Config directory structure
 [ ! -d ~/.zsh ] && mkdir -p ~/.zsh/{core,git,node,docker}
 
 # Source all configuration files
@@ -20,7 +20,7 @@ for config_file (~/.zsh/**/*.sh) {
 
 # Strategy 2: Module-specific sourcing
 modules=(
-  core    # Base ZSH configuration
+  core    # Base Shell Configuration
   git     # Git integration
   node    # Node.js development
   docker  # Docker tools
@@ -50,7 +50,7 @@ export const devTemplate = createTemplate([
         title: 'core.sh',
         type: 'injector',
         content:
-            '# Core ZSH configuration\nsource ~/.zsh/core/history.sh\nsource ~/.zsh/core/completion.sh\nsource ~/.zsh/core/keybindings.sh\nsource ~/.zsh/core/options.sh',
+            '# Core Shell Configuration\nsource ~/.zsh/core/history.sh\nsource ~/.zsh/core/completion.sh\nsource ~/.zsh/core/keybindings.sh\nsource ~/.zsh/core/options.sh',
         children: [
             {
                 title: 'history.sh',

@@ -149,9 +149,9 @@ export default function ShellHelpers({ onInsertSnippet }: Props) {
                     <div className='flex-1 overflow-y-auto p-2 space-y-1'>
                         {filteredSnippets.map((snippet, index) => (
                             <React.Fragment key={snippet.id}>
-                                <button
+                                <div 
                                     onClick={() => onInsertSnippet(snippet.code)}
-                                    className='w-full text-left p-2 rounded hover:bg-[#333] group transition-colors relative'
+                                    className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:bg-white/[0.06] cursor-pointer"
                                 >
                                     <div className='flex items-center justify-between'>
                                         <span className='text-sm text-white font-medium'>
@@ -165,7 +165,7 @@ export default function ShellHelpers({ onInsertSnippet }: Props) {
                                     <p className='text-xs text-gray-400 mt-0.5 line-clamp-2'>
                                         {snippet.description}
                                     </p>
-                                </button>
+                                </div>
                                 {index < filteredSnippets.length - 1 && (
                                     <div className='h-px bg-[#333] mx-1' />
                                 )}

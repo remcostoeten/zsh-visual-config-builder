@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Plus, Filter, SortDesc } from 'lucide-react'
 import { useRoadmapStore, Task } from '../roadmap-slice'
-import TaskItem from './TaskItem'
+import TaskItem from './task-item'
 import TaskDialog from './TaskDialog'
 
 export default function RoadmapPage() {

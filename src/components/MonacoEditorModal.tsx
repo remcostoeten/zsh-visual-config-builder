@@ -23,7 +23,7 @@ export default function MonacoEditorModal({
     isMainNode
 }: Props) {
     const [editorContent, setEditorContent] = React.useState(content)
-    const [validation, setValidation] = React.useState({ isValid: true })
+    const [validation, setValidation] = React.useState<{ isValid: boolean; error?: string }>({ isValid: true })
     const dialogContentRef = useRef<HTMLDivElement>(null)
 
     // Reset content when modal opens
@@ -45,7 +45,7 @@ export default function MonacoEditorModal({
         return () => window.removeEventListener('keydown', handleEscape)
     }, [isOpen, onClose])
 
-    const handleInteractOutside = (e: React.MouseEvent) => {
+    const handleInteractOutside = (e: PointerDownOutsideEvent) => {
         // Check if the click is actually outside the modal content
         if (dialogContentRef.current && !dialogContentRef.current.contains(e.target as Node)) {
             onClose()
@@ -136,13 +136,13 @@ export default function MonacoEditorModal({
                         </p>
                         <div className='space-y-2'>
                             <code className='block text-xs bg-black/20 p-2 rounded text-white/70'>
-                                # Create ZSH config directories
-                                [ ! -d ~/.zsh ] && mkdir -p ~/.zsh/{core,git,node}
-                                
-                                # Source configuration files
-                                source ~/.zsh/core/aliases.sh
-                                source ~/.zsh/git/config.sh
-                                source ~/.zsh/node/setup.sh
+                                {`# Create Shell Config directories
+[ ! -d ~/.zsh ] && mkdir -p ~/.zsh/{core,git,node}
+
+# Source configuration files
+source ~/.zsh/core/aliases.sh
+source ~/.zsh/git/config.sh
+source ~/.zsh/node/setup.sh`}
                             </code>
                         </div>
                     </div>

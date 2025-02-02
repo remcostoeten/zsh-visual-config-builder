@@ -35,10 +35,10 @@ export function Header({ saveConfig }: HeaderProps) {
     ]
 
     return (
-        <header className="sticky top-0 w-full border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 py-3 z-50">
-            <div className="container mx-auto flex items-center justify-between px-4">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+        <header className="sticky top-0 w-full border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 py-2">
+            <div className="container mx-auto flex items-center justify-between px-3">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-lg font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                         Shell Config
                     </h1>
                     <ExpandableTabs tabs={tabs} />

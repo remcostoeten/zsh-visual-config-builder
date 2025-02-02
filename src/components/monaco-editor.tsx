@@ -102,7 +102,7 @@ export default function MonacoEditorModal({
                                 </p>
                                 <div className='space-y-2'>
                                     <code className='block text-xs bg-black/20 p-2 rounded text-white/70'>
-                                        # Create ZSH config directories [ ! -d ~/.zsh ] && mkdir -p
+                                        # Create Shell Config directories [ ! -d ~/.zsh ] && mkdir -p
                                         ~/.zsh/{(core, git, node)}# Source configuration files
                                         source ~/.zsh/core/aliases.sh source ~/.zsh/git/config.sh
                                         source ~/.zsh/node/setup.sh

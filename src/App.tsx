@@ -7,16 +7,15 @@ import {
     useSearchParams
 } from 'react-router-dom'
 import Footer from './components/footer'
-import { Header } from './components/header'
 import PathConfig from './components/path-config'
-import { Toast } from './components/ui/toast'
-import { FeaturePromoBanner } from './components/UpgradeBanner'
+import { ToastProvider } from './components/ui/toast'
+import { FeaturePromoBanner } from './components/upgrade-banner'
 import { useAuthStore } from './features/auth/github-auth'
 import { useCanvasStore } from './features/canvas/canvas-slice'
 import { Canvas } from './features/canvas/components/canvas'
 import { persistenceService } from './features/persistence/persistence-service'
 import { RoadmapPage } from './features/roadmap/components/roadmap-page'
-import { useToast } from './hooks/use-toast'
+import { useToast } from './components/ui/toast'
 
 function AppContent() {
     const {
@@ -27,7 +26,7 @@ function AppContent() {
         markChangesSaved,
         lastSavedConfig
     } = useCanvasStore()
-    const { state, showToast } = useToast()
+    const { addToast } = useToast()
     const { handleAuthCallback } = useAuthStore()
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
@@ -36,7 +35,7 @@ function AppContent() {
     useEffect(() => {
         const savedConfig = persistenceService.loadConfig()
         if (savedConfig) {
-            setConfig(savedConfig)
+            setConfig([savedConfig])
             markChangesSaved()
         }
     }, [markChangesSaved, setConfig])
@@ -46,18 +45,17 @@ function AppContent() {
             setShowUnsavedToast(true)
         }
     }, [hasUnsavedChanges])
-
     const handleReset = () => {
-        setConfig(lastSavedConfig)
+        setConfig([lastSavedConfig])
         markChangesSaved()
         setShowUnsavedToast(false)
     }
 
     const handleSaveConfig = useCallback(() => {
         saveConfig()
-        showToast({ type: 'success', message: 'Configuration saved successfully' })
+        addToast('Configuration saved successfully', 'success')
         setShowUnsavedToast(false)
-    }, [saveConfig, showToast])
+    }, [saveConfig, addToast])
 
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
@@ -90,23 +88,10 @@ function AppContent() {
                 path='/'
                 element={
                     <div className='min-h-screen bg-[#1A1A1A] text-white pb-20'>
-                        {!isZenMode && <Header onSave={handleSaveConfig} />}
-
                         <div className='relative'>
                             <Canvas />
                             <PathConfig />
                         </div>
-
-                        <div className='fixed bottom-24 left-1/2 -translate-x-1/2 z-50'>
-                            {hasUnsavedChanges && showUnsavedToast && (
-                                <Toast
-                                    state={state}
-                                    onReset={handleReset}
-                                    onSave={handleSaveConfig}
-                                />
-                            )}
-                        </div>
-
                         {!isZenMode && <Footer />}
                         <FeaturePromoBanner />
                     </div>
@@ -143,7 +128,9 @@ function AuthCallback() {
 function App() {
     return (
         <Router>
-            <AppContent />
+            <ToastProvider>
+                <AppContent />
+            </ToastProvider>
         </Router>
     )
 }

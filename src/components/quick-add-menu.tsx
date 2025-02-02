@@ -8,7 +8,7 @@ interface Props {
     onClose: () => void
 }
 
-export function QuickAddMenu({ position, onSelect, onClose }: Props) {
+export default function QuickAddMenu({ position, onSelect, onClose }: Props) {
     React.useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (!(e.target as Element).closest('.quick-add-menu')) {

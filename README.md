@@ -1,12 +1,12 @@
-# ZSH Config Builder
+# Shell Config Builder
 
-A visual editor for creating and managing modular ZSH configurations. Split your monolithic `.zshrc` into maintainable, focused modules with a beautiful drag-and-drop interface.
+A visual editor for creating and managing modular Shell Configurations. Split your monolithic `.zshrc` into maintainable, focused modules with a beautiful drag-and-drop interface.
 
-![ZSH Config Builder Screenshot](https://source.unsplash.com/random/1200x630/?code)
+![Shell Config Builder Screenshot](https://source.unsplash.com/random/1200x630/?code)
 
 ## ✨ Features
 
-- 🎨 Visual node-based editor for ZSH configurations
+- 🎨 Visual node-based editor for Shell Configurations
 - 📦 Split configs into modular, reusable files
 - ✅ Real-time shell syntax validation
 - 🔌 Smart dependency management

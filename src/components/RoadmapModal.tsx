@@ -55,7 +55,7 @@ export function RoadmapModal({ isOpen, onClose }: Props) {
                 </DialogTitle>
                 <div className='space-y-6'>
                     <p className='text-gray-400 text-sm mt-1'>
-                        Upcoming features and improvements planned for the ZSH Config Editor
+                        Upcoming features and improvements planned for the Shell Config Editor
                     </p>
 
                     <div className='grid gap-4'>

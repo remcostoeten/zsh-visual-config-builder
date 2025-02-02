@@ -17,7 +17,6 @@ interface Props {
     onUpdate: (id: string, updates: Partial<ConfigNode>) => void
     onPositionChange: (id: string, position: Position) => void
     onDrag: (id: string, position: Position) => void
-    onDelete?: (id: string) => void
     onLink?: (id: string) => void
 }
 
@@ -27,12 +26,11 @@ export function DraggableNode({
     onUpdate,
     onPositionChange,
     onDrag,
-    onDelete,
     onLink
 }: Props) {
     const [isEditing, setIsEditing] = React.useState(false)
     const [showEditor, setShowEditor] = React.useState(false)
-    const { linkingNode, finishLinking } = useCanvasStore()
+    const { linkingNode, finishLinking, removeNode } = useCanvasStore()
     const nodeRef = useRef<HTMLDivElement>(null)
     const setNodePosition = useCanvasStore(state => state.setNodePosition)
     const { addToast } = useToast()
@@ -144,6 +142,11 @@ export function DraggableNode({
     // Only show link button for injectors
     const showLinkButton = node.type === 'injector'
 
+    const handleDelete = () => {
+        removeNode(node.id)
+        addToast('Node deleted successfully', 'success')
+    }
+
     return (
         <>
             <Draggable
@@ -212,7 +215,7 @@ export function DraggableNode({
                                 )}
                                 {node.type !== 'main' && (
                                     <button
-                                        onClick={() => onDelete?.(node.id)}
+                                        onClick={handleDelete}
                                         className='p-1 text-white/40 hover:text-white/90 transition-colors rounded hover:bg-white/[0.06]'
                                     >
                                         <Trash2 className='w-3 h-3' />

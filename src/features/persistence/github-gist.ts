@@ -9,9 +9,9 @@ interface Gist {
 }
 
 export const githubGistService = {
-    async saveConfig(config: any, token: string) {
+    async saveConfig(config: unknown, token: string) {
         const gist: Gist = {
-            description: 'ZSH Config Builder configuration',
+            description: 'Shell Config Builder configuration',
             public: false,
             files: {
                 'zsh-config.json': {

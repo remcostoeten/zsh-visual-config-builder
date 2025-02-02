@@ -49,11 +49,11 @@ export function Introduction({
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className='sm:max-w-[600px]'>
-                    <DialogTitle>About ZSH Config Builder</DialogTitle>
+                    <DialogTitle>About Shell Config Builder</DialogTitle>
 
                     <div className='space-y-4'>
                         <p className='text-sm text-gray-400'>
-                            A visual tool for creating and managing modular ZSH configurations.
+                            A visual tool for creating and managing modular Shell Configurations.
                         </p>
 
                         <div className='grid grid-cols-2 gap-4'>

@@ -1,18 +1,29 @@
-import React from 'react'
+import React, { useRef, useMemo, useEffect } from 'react'
 import { FileCode, GitFork, Copy } from 'lucide-react'
 import { useCanvasStore } from '../canvas-slice'
-import { Position } from 'monaco-editor'
+import { Position } from '../../../types/config'
 import { NodeType, ConfigNode } from '../../../types/config'
+
 interface Props {
     position: Position
     onSelect: (type: NodeType, template?: ConfigNode) => void
     onClose: () => void
 }
 
-export default function QuickAddMenu({ position, onSelect, onClose }: Props) {
+export function QuickAddMenu({ position, onSelect, onClose }: Props) {
     const [showTemplates, setShowTemplates] = React.useState<'injector' | 'partial' | null>(null)
     const config = useCanvasStore(state => state.config)
-    const menuRef = React.useRef<HTMLDivElement>(null)
+    const menuRef = useRef<HTMLDivElement>(null)
+    
+    // Use a fixed position relative to the viewport
+    const menuPosition = useMemo(() => {
+        if (!position) return { left: 0, top: 0 }
+        
+        return {
+            left: position.x,
+            top: position.y
+        }
+    }, [position])
 
     const findInjectors = (node: ConfigNode): ConfigNode[] => {
         let injectors: ConfigNode[] = []
@@ -29,9 +40,9 @@ export default function QuickAddMenu({ position, onSelect, onClose }: Props) {
 
     const existingInjectors = findInjectors(config)
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (!(e.target as Element).closest('.quick-add-menu')) {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 onClose()
             }
         }
@@ -43,24 +54,30 @@ export default function QuickAddMenu({ position, onSelect, onClose }: Props) {
     return (
         <div
             ref={menuRef}
-            className='quick-add-menu absolute bg-[#252525] rounded-lg border border-[#333] shadow-xl p-2 w-48 animate-fadeIn z-50'
+            className='absolute bg-[#252525] rounded-lg border border-[#333] shadow-xl p-2 w-48 z-50'
             style={{
-                left: position.x,
-                top: position.y,
+                left: `${menuPosition.left}px`,
+                top: `${menuPosition.top}px`,
                 transform: 'translate(-50%, -50%)'
             }}
         >
             {!showTemplates ? (
                 <>
                     <button
-                        onClick={() => onSelect('injector')}
+                        onClick={() => {
+                            onSelect('injector')
+                            onClose()
+                        }}
                         className='flex items-center gap-2 w-full p-2 text-left text-gray-300 hover:bg-[#333] rounded transition-colors'
                     >
                         <GitFork className='w-4 h-4' />
                         Add Injector
                     </button>
                     <button
-                        onClick={() => onSelect('partial')}
+                        onClick={() => {
+                            onSelect('partial')
+                            onClose()
+                        }}
                         className='flex items-center gap-2 w-full p-2 text-left text-gray-300 hover:bg-[#333] rounded transition-colors'
                     >
                         <FileCode className='w-4 h-4' />
@@ -109,3 +126,5 @@ export default function QuickAddMenu({ position, onSelect, onClose }: Props) {
         </div>
     )
 }
+
+export default QuickAddMenu
