@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 interface ToastProps {
     state: 'initial' | 'loading' | 'success'
+    message?: string
     onReset?: () => void
     onSave?: () => void
     onDismiss?: () => void
@@ -44,7 +45,7 @@ const springConfig = {
     mass: 1
 }
 
-export function Toast({ state = 'initial', onReset, onSave, onDismiss }: ToastProps) {
+export function Toast({ state = 'initial', message, onReset, onSave, onDismiss }: ToastProps) {
     const commonClasses =
         'h-10 bg-[#131316] rounded-[99px] shadow-[0px_32px_64px_-16px_rgba(0,0,0,0.30)] shadow-[0px_16px_32px_-8px_rgba(0,0,0,0.30)] shadow-[0px_8px_16px_-4px_rgba(0,0,0,0.24)] shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.24)] shadow-[0px_-8px_16px_-1px_rgba(0,0,0,0.16)] shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.24)] shadow-[0px_0px_0px_1px_rgba(0,0,0,1.00)] shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.08)] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.20)] justify-center items-center inline-flex overflow-hidden'
 
@@ -69,7 +70,7 @@ export function Toast({ state = 'initial', onReset, onSave, onDismiss }: ToastPr
                             <>
                                 <IOSpinner />
                                 <div className="text-white text-[13px] font-normal font-['Geist'] leading-tight whitespace-nowrap">
-                                    Saving
+                                    {message || 'Saving'}
                                 </div>
                             </>
                         )}
@@ -79,7 +80,7 @@ export function Toast({ state = 'initial', onReset, onSave, onDismiss }: ToastPr
                                     <Check className='w-3.5 h-3.5 text-white' />
                                 </div>
                                 <div className="text-white text-[13px] font-normal font-['Geist'] leading-tight whitespace-nowrap">
-                                    Changes Saved
+                                    {message || 'Changes Saved'}
                                 </div>
                             </>
                         )}
@@ -87,7 +88,7 @@ export function Toast({ state = 'initial', onReset, onSave, onDismiss }: ToastPr
                             <>
                                 <InfoIcon />
                                 <div className="text-white text-[13px] font-normal font-['Geist'] leading-tight whitespace-nowrap">
-                                    Unsaved changes
+                                    {message || 'Unsaved changes'}
                                 </div>
                             </>
                         )}
