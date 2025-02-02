@@ -1,18 +1,9 @@
 import { create } from 'zustand'
 import { ConfigNode, Position, NodeType } from '../../types/config'
 import { persist } from 'zustand/middleware'
-import { 
-    addNewNode,
-    removeNodeFromTree,
-    updateNodeInTree,
-    handleNodeLinking,
-    handleConfigSave,
-    handleConfigLoad 
-} from './canvas-operations'
-import { useToast } from "../../components/ui/toast"
 import { nanoid } from 'nanoid'
-
-// Constants
+import { useAuthStore } from '../auth/github-auth'
+import { githubGistService } from '../persistence/github-gist'
 const SPACING = {
     NODE: 250,
     VERTICAL: 150,
@@ -20,15 +11,8 @@ const SPACING = {
     INITIAL_OFFSET: { x: 100, y: 100 }
 } as const
 
-const CANVAS = {
-    PADDING: 50,
-    WIDTH: 3000,
-    HEIGHT: 2000
-} as const
-
-// Types
 interface NodeState extends ConfigNode {
-    position?: Position
+    position: Position
 }
 
 interface CanvasState {
@@ -38,10 +22,12 @@ interface CanvasState {
     positions: Record<string, Position>
     quickAddPosition: Position | null
     isZenMode: boolean
-    orientation: 'normal' | 'horizontal' | 'vertical'
+    orientation: 'horizontal' | 'vertical'
     hasUnsavedChanges: boolean
     linkingNode: { id: string; type: 'parent' | 'child' } | null
     lastSavedConfig: ConfigNode
+    showWizard: boolean
+    isCanvasLocked: boolean
 
     // Actions
     setConfig: (nodes: ConfigNode[]) => void
@@ -51,21 +37,22 @@ interface CanvasState {
     setZenMode: (isZenMode: boolean) => void
     cycleOrientation: () => void
     clearCanvas: () => void
-    addNode: (type: NodeType, position: Position) => string
+    addNode: (type: NodeType, position: Position, template?: string) => string
     removeNode: (id: string) => void
     startLinking: (id: string, type: 'parent' | 'child') => void
-    finishLinking: (targetId: string) => void
+    finishLinking: () => void
     cancelLinking: () => void
     markChangesSaved: () => void
     saveConfig: () => void
     loadConfig: (config: ConfigNode) => void
     setNodePosition: (id: string, position: Position) => void
     setPositions: (positions: Record<string, Position>) => void
+    resetPositions: () => void
+    toggleCanvasLock: () => void
+    setShowWizard: (show: boolean) => void
 }
 
 // Helper Functions
-const generateId = () => Math.random().toString(36).substring(2, 15)
-
 const findNodeById = (node: ConfigNode, id: string): ConfigNode | null => {
     if (node.id === id) return node
     if (node.children) {
@@ -85,41 +72,64 @@ const updateNodeLevel = (node: ConfigNode, level: number): ConfigNode => {
     return updatedNode
 }
 
+const initialNode = {
+    id: 'main',
+    title: '.zshrc',
+    content: '',
+    type: 'zsh' as const,
+    level: 0,
+    children: [],
+    connections: [],
+    main: ['zshrc', 'injector', 'partial'] as ['zshrc', 'injector', 'partial']
+}
+
+const calculateNodePositions = (node: ConfigNode, startX = 100, startY = 100, spacing = { x: 250, y: 150 }) => {
+    const positions: Record<string, Position> = {
+        [node.id]: { x: startX, y: startY }
+    }
+
+    if (node.children) {
+        node.children.forEach((child, index) => {
+            const childX = startX + spacing.x
+            const childY = startY + (index * spacing.y) - ((node.children?.length ?? 1) - 1) * spacing.y / 2
+            
+            const childPositions = calculateNodePositions(child, childX, childY, spacing)
+            Object.assign(positions, childPositions)
+        })
+    }
+
+    return positions
+}
+
 // Store Creation
 export const useCanvasStore = create<CanvasState>()(
     persist(
         (set, get) => ({
             // Initial State
             nodes: [],
-            config: {
-                id: 'main',
-                title: '.zshrc',
-                content: '',
-                type: 'main',
-                level: 0,
-                children: [],
-                connections: []
-            },
+            config: initialNode,
             positions: {
                 main: SPACING.INITIAL_OFFSET
             },
             quickAddPosition: null,
             isZenMode: false,
-            orientation: 'normal',
+            orientation: 'horizontal' as const,
             hasUnsavedChanges: false,
             linkingNode: null,
-            lastSavedConfig: {
-                id: 'main',
-                title: '.zshrc',
-                content: '',
-                type: 'main',
-                level: 0,
-                children: [],
-                connections: []
-            },
-
+            lastSavedConfig: { ...initialNode },
+            showWizard: true,
+            isCanvasLocked: false,
             // Actions
-            setConfig: (nodes) => set({ nodes }),
+            setConfig: (config: ConfigNode[]) => {
+                const mainConfig = config[0]
+                const positions = calculateNodePositions(mainConfig)
+                
+                set({
+                    config: mainConfig,
+                    positions,
+                    hasUnsavedChanges: true
+                })
+            },
             setQuickAddPosition: (position) => set({ quickAddPosition: position }),
             setZenMode: (isZenMode) => set({ isZenMode }),
             setPositions: (positions) => set({ positions }),
@@ -152,53 +162,81 @@ export const useCanvasStore = create<CanvasState>()(
 
             cycleOrientation: () =>
                 set(state => ({
-                    orientation: state.orientation === 'normal' 
-                        ? 'horizontal' 
-                        : state.orientation === 'horizontal'
-                            ? 'vertical'
-                            : 'normal'
+                    orientation: state.orientation === 'horizontal'
+                        ? 'vertical'
+                        : 'horizontal'
                 })),
 
-            clearCanvas: () =>
-                set({
-                    nodes: [],
-                    config: {
-                        id: 'main',
-                        title: '.zshrc',
-                        content: '',
-                        type: 'main',
-                        level: 0,
-                        children: [],
-                        connections: []
-                    },
-                    positions: {
-                        main: SPACING.INITIAL_OFFSET
-                    },
-                    hasUnsavedChanges: true
-                }),
-
-            addNode: (type, position) => {
-                const id = nanoid()
-                const newNode: NodeState = {
-                    id,
-                    type,
-                    title: `${type}_${get().nodes.length + 1}`,
+            clearCanvas: () => set({
+                config: {
+                    id: 'main',
+                    title: '.zshrc',
                     content: '',
-                    level: type === 'main' ? 0 : type === 'injector' ? 1 : 2,
+                    type: 'zsh' as const,
+                    level: 0,
+                    children: [],
                     connections: [],
-                    position
+                    main: ['zshrc', 'injector', 'partial'] as const
+                },
+                nodes: [],
+                positions: {},
+                quickAddPosition: null,
+                linkingNode: null,
+                hasUnsavedChanges: false
+            }),
+
+            resetPositions: () => {
+                const nodes = get().nodes
+                const newPositions: Record<string, Position> = {}
+                
+                // Calculate grid positions
+                nodes.forEach((node, index) => {
+                    newPositions[node.id] = {
+                        x: 200 + (index % 3) * 300,
+                        y: 200 + Math.floor(index / 3) * 200
+                    }
+                })
+
+                set({ positions: newPositions })
+            },
+
+            addNode: (type, position, template = '') => {
+                const newNode: NodeState = {
+                    id: nanoid(),
+                    type,
+                    title: `${type}_${get().nodes.length + 1}.sh`,
+                    content: template || '',
+                    level: type === 'zsh' ? 0 : type === 'injector' ? 1 : 2,
+                    connections: [],
+                    position,
+                    children: type === 'injector' ? [] : undefined,
+                    main: ['zshrc', 'injector', 'partial'] as const
+                }
+
+                // Only allow partial creation if there's at least one injector
+                if (type === 'partial') {
+                    const state = get()
+                    const hasInjector = state.nodes.some(node => node.type === 'injector')
+                    if (!hasInjector) {
+                        console.warn('You need at least one injector to add partials')
+                        return newNode.id
+                    }
                 }
 
                 set(state => ({
                     nodes: [...state.nodes, newNode],
                     positions: {
                         ...state.positions,
-                        [id]: position
+                        [newNode.id]: position
+                    },
+                    config: {
+                        ...state.config,
+                        children: [...(state.config.children || []), newNode]
                     },
                     hasUnsavedChanges: true
                 }))
 
-                return id
+                return newNode.id
             },
 
             removeNode: (id) =>
@@ -211,21 +249,48 @@ export const useCanvasStore = create<CanvasState>()(
                 })),
 
             startLinking: (id, type) => set({ linkingNode: { id, type } }),
-            finishLinking: (targetId) => set({ linkingNode: null }),
+            finishLinking: () => set({ linkingNode: null }),
             markChangesSaved: () => set(state => ({
                 hasUnsavedChanges: false,
                 lastSavedConfig: state.config
             })),
-            saveConfig: () => {
+            saveConfig: async () => {
                 const state = get()
-                // Implement save logic here
-                set({ hasUnsavedChanges: false })
+                const { isAuthenticated, token } = useAuthStore.getState()
+
+                // Local save
+                set({
+                    hasUnsavedChanges: false,
+                    lastSavedConfig: state.config,
+                    config: {
+                        ...state.config,
+                        children: state.nodes
+                    }
+                })
+
+                // Save to GitHub if authenticated
+                if (isAuthenticated && token) {
+                    try {
+                        await githubGistService.saveConfig({
+                            config: state.config,
+                            nodes: state.nodes,
+                            positions: state.positions
+                        }, token)
+                    } catch (error) {
+                        console.error('Failed to save to GitHub:', error)
+                        // Could throw or handle error here
+                    }
+                }
             },
             loadConfig: (config) => set({
                 config,
                 hasUnsavedChanges: false,
                 lastSavedConfig: config
-            })
+            }),
+            toggleCanvasLock: () => set(state => ({ isCanvasLocked: !state.isCanvasLocked })),
+            setShowWizard: (show: boolean) => set(state => ({
+                showWizard: show || state.nodes.length === 0
+            })),
         }),
         {
             name: 'canvas-storage'

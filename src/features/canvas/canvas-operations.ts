@@ -1,6 +1,15 @@
-import { ConfigNode, Position } from '../../types/config'
-import { StateCreator } from 'zustand'
-import { CanvasState } from './canvas-slice'
+import { ConfigNode, Position, NodeType } from '@/types/config'
+import { generateId } from '@/utils/generateId'
+import { githubGistService } from '../persistence/github-gist'
+import { useAuthStore } from '@/features/auth/github-auth'
+
+interface CanvasState {
+    config: ConfigNode
+    positions: Record<string, Position>
+    orientation: string
+    hasUnsavedChanges: boolean
+    lastSavedConfig: ConfigNode | null
+}
 
 const SPACING = {
     NODE: 250,
@@ -9,83 +18,48 @@ const SPACING = {
     INITIAL_OFFSET: { x: 100, y: 100 }
 } as const
 
-const CANVAS = {
-    PADDING: 50,
-    WIDTH: 3000,
-    HEIGHT: 2000
-} as const
-
 export const addNewNode = (
-    state: CanvasState,
-    type: 'injector' | 'partial',
-    template?: ConfigNode
-) => {
-    const findFreePosition = (basePosition: Position): Position => {
-        const isPositionValid = (pos: Position): boolean => {
-            if (pos.x < CANVAS.PADDING || pos.x > CANVAS.WIDTH - CANVAS.PADDING) return false
-            if (pos.y < CANVAS.PADDING || pos.y > CANVAS.HEIGHT - CANVAS.PADDING) return false
-
-            return !Object.values(state.positions).some(nodePos => {
-                const xDiff = Math.abs(nodePos.x - pos.x)
-                const yDiff = Math.abs(nodePos.y - pos.y)
-                return xDiff < SPACING.NODE && yDiff < SPACING.VERTICAL
-            })
-        }
-
-        let position = { ...basePosition }
-        position.x = Math.round(position.x / SPACING.GRID_SNAP) * SPACING.GRID_SNAP
-        position.y = Math.round(position.y / SPACING.GRID_SNAP) * SPACING.GRID_SNAP
-
-        if (!isPositionValid(position)) {
-            let ring = 1
-            while (ring < 20) {
-                for (let dx = -ring; dx <= ring; dx++) {
-                    for (let dy = -ring; dy <= ring; dy++) {
-                        if (Math.abs(dx) === ring || Math.abs(dy) === ring) {
-                            const testPos = {
-                                x: position.x + dx * SPACING.NODE,
-                                y: position.y + dy * SPACING.VERTICAL
-                            }
-                            if (isPositionValid(testPos)) {
-                                return testPos
-                            }
-                        }
-                    }
-                }
-                ring++
-            }
-            return {
-                x: CANVAS.PADDING + Math.random() * (CANVAS.WIDTH - 2 * CANVAS.PADDING),
-                y: CANVAS.PADDING + Math.random() * (CANVAS.HEIGHT - 2 * CANVAS.PADDING)
-            }
-        }
-        return position
-    }
-
-    const newNode = {
-        id: Math.random().toString(36).substring(2, 15),
-        title: template ? template.title : type === 'injector' ? 'new_injector.sh' : 'new_partial.sh',
-        content: template ? template.content : '# New file content',
+    type: NodeType,
+    nodes: ConfigNode[],
+    parentId?: string
+): ConfigNode => {
+    const newNode: ConfigNode = {
+        id: generateId(),
+        title: type === 'injector' 
+            ? `${type}_${nodes.length + 1}.sh`
+            : type === 'partial'
+                ? `${type}_${nodes.length + 1}.sh`
+                : '.zshrc',
+        content: getInitialContent(type),
         type,
-        level: type === 'injector' ? 1 : 2,
+        level: parentId ? getNodeLevel(parentId, nodes) + 1 : 0,
         children: type === 'injector' ? [] : undefined,
+        main: ['zshrc', 'injector', 'partial'] as ['zshrc', 'injector', 'partial'],
         connections: []
     }
 
-    const freePosition = findFreePosition(state.quickAddPosition)
-
-    return {
-        config: {
-            ...state.config,
-            children: [...(state.config.children || []), newNode]
-        },
-        positions: {
-            ...state.positions,
-            [newNode.id]: freePosition
-        },
-        quickAddPosition: null,
-        hasUnsavedChanges: true
+    // If it's a partial, it must have an injector parent
+    if (type === 'partial' && !parentId) {
+        throw new Error('Partial nodes must have an injector parent')
     }
+
+    // If parent is specified, add the node as a child
+    if (parentId) {
+        const parent = findNodeById(parentId, nodes)
+        if (!parent) throw new Error('Parent node not found')
+        
+        // Only allow partials to be children of injectors
+        if (parent.type !== 'injector' && type === 'partial') {
+            throw new Error('Partial nodes can only be children of injector nodes')
+        }
+
+        parent.children = parent.children || []
+        parent.children.push(newNode)
+    } else {
+        nodes.push(newNode)
+    }
+
+    return newNode
 }
 
 export const removeNodeFromTree = (node: ConfigNode, id: string): ConfigNode => {
@@ -111,52 +85,62 @@ export const updateNodeInTree = (node: ConfigNode, id: string, updates: Partial<
     return node
 }
 
-export const handleNodeLinking = (state: CanvasState, targetId: string) => {
-    const { id: sourceId, type } = state.linkingNode!
-    const sourceNode = findNodeById(state.config, sourceId)
-    const targetNode = findNodeById(state.config, targetId)
+export const handleNodeLinking = (
+    sourceId: string,
+    targetId: string,
+    nodes: ConfigNode[]
+): ConfigNode[] => {
+    const sourceNode = findNodeById(sourceId, nodes)
+    const targetNode = findNodeById(targetId, nodes)
 
-    if (!sourceNode || !targetNode) return state
-
-    const updatedConfig = {
-        ...state.config,
-        connections: [
-            ...(state.config.connections || []),
-            { source: sourceId, target: targetId, type }
-        ]
+    if (!sourceNode || !targetNode) {
+        throw new Error('Source or target node not found')
     }
 
-    return {
-        config: updatedConfig,
-        linkingNode: null,
-        hasUnsavedChanges: true
+    // Only allow linking partials to injectors
+    if (sourceNode.type === 'partial' && targetNode.type !== 'injector') {
+        throw new Error('Partial nodes can only be linked to injector nodes')
     }
+
+    // Remove from previous parent if exists
+    removeFromParent(sourceNode, nodes)
+
+    // Add to new parent
+    if (targetNode.type === 'injector') {
+        targetNode.children = targetNode.children || []
+        targetNode.children.push(sourceNode)
+        sourceNode.level = targetNode.level + 1
+    }
+
+    return [...nodes]
 }
 
-export const handleConfigSave = (state: CanvasState, set: StateCreator<CanvasState>) => {
+export const handleConfigSave = async (state: CanvasState, set: any) => {
+    const { isAuthenticated, token } = useAuthStore.getState()
+    
+    if (!isAuthenticated || !token) {
+        throw new Error('Authentication required to save to GitHub')
+    }
+
     const configToSave = {
         config: state.config,
         positions: state.positions,
         orientation: state.orientation
     }
 
-    const blob = new Blob([JSON.stringify(configToSave, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'zsh-config.json'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    set({
-        hasUnsavedChanges: false,
-        lastSavedConfig: state.config
-    })
+    try {
+        await githubGistService.saveConfig(configToSave, token)
+        
+        set({
+            hasUnsavedChanges: false,
+            lastSavedConfig: state.config
+        })
+    } catch (error) {
+        throw error
+    }
 }
 
-export const handleConfigLoad = (loadedConfig: ConfigNode, set: StateCreator<CanvasState>) => {
+export const handleConfigLoad = (loadedConfig: ConfigNode, set: any) => {
     const positions: Record<string, Position> = {
         [loadedConfig.id]: SPACING.INITIAL_OFFSET
     }
@@ -186,13 +170,42 @@ export const handleConfigLoad = (loadedConfig: ConfigNode, set: StateCreator<Can
     })
 }
 
-const findNodeById = (node: ConfigNode, id: string): ConfigNode | null => {
-    if (node.id === id) return node
-    if (node.children) {
-        for (const child of node.children) {
-            const found = findNodeById(child, id)
+export const findNodeById = (id: string, nodes: ConfigNode[]): ConfigNode | null => {
+    for (const node of nodes) {
+        if (node.id === id) return node
+        if (node.children) {
+            const found = findNodeById(id, node.children)
             if (found) return found
         }
     }
     return null
+}
+
+const getNodeLevel = (parentId: string, nodes: ConfigNode[]): number => {
+    const parent = findNodeById(parentId, nodes)
+    return parent ? parent.level : 0
+}
+
+const removeFromParent = (node: ConfigNode, nodes: ConfigNode[]) => {
+    for (const n of nodes) {
+        if (n.children) {
+            const index = n.children.findIndex(child => child.id === node.id)
+            if (index !== -1) {
+                n.children.splice(index, 1)
+                return
+            }
+            removeFromParent(node, n.children)
+        }
+    }
+}
+
+const getInitialContent = (type: NodeType): string => {
+    switch (type) {
+        case 'injector':
+            return '# Injector Configuration\n\n# Source your partial configurations here'
+        case 'partial':
+            return '# Partial Configuration\n\n# Add your shell commands here'
+        default:
+            return '# Shell Configuration\n\n# This is your main shell configuration file\n# It will source all your injector files\n\n# Create configuration directories\n[ ! -d ~/.zsh ] && mkdir -p ~/.zsh\n'
+    }
 } 
