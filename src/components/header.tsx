@@ -1,80 +1,58 @@
-import { Link } from 'react-router-dom'
-import { Button } from './ui/button'
-import { useAuthStore } from '../features/auth/github-auth'
-import { Github } from 'lucide-react'
+"use client"
 
-interface HeaderProps {
-    onSave: () => void
-}
+import { GitBranch, Home, Settings, Github, Lock } from "lucide-react"
+import { ExpandableTabs } from "./ui/expandable-tabs"
+import { useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { useAuthStore } from "../features/auth/github-auth"
 
-export function Header({ onSave }: HeaderProps) {
-    const { isAuthenticated, username, login, logout } = useAuthStore()
+export function Header() {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const { isAuthenticated, login, logout } = useAuthStore()
+
+    const handleAuthAction = async () => {
+        if (isAuthenticated) {
+            await logout()
+        } else {
+            await login()
+        }
+    }
+
+    const tabs = [
+        {
+            title: "Config builder",
+            icon: Home,
+            action: () => navigate('/'),
+            isActive: location.pathname === '/'
+        },
+        {
+            title: "Roadmap",
+            icon: GitBranch,
+            action: () => navigate('/roadmap'),
+            isActive: location.pathname === '/roadmap'
+        },
+        { type: "separator" as const },
+        {
+            title: "Github",
+            icon: Github,
+            action: () => window.open("https://github.com/yourusername/yourrepo", "_blank"),
+        },
+        {
+            title: isAuthenticated ? "Logout" : "Login",
+            icon: Lock,
+            action: handleAuthAction,
+        },
+    ]
 
     return (
-        <div className='w-full border-b border-white/10'>
-            <div className='max-w-[1200px] mx-auto px-8 py-4'>
-                <div className='flex items-center justify-between'>
-                    {/* Left side - Title */}
-                    <div className='flex items-center space-x-8'>
-                        <Link to='/'>
-                            <h1 className='text-2xl font-bold bg-gradient-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent'>
-                                ShellConfig Editor
-                            </h1>
-                        </Link>
-                        <nav className='flex items-center space-x-6'>
-                            <Link
-                                to='/roadmap'
-                                className='text-sm text-white/70 hover:text-white transition-colors'
-                            >
-                                Roadmap
-                            </Link>
-                            <button
-                                className='text-sm text-white/70 hover:text-white transition-colors'
-                                onClick={() =>
-                                    window.open(
-                                        'https://github.com/yourusername/shellconfig-editor',
-                                        '_blank'
-                                    )
-                                }
-                            >
-                                About
-                            </button>
-                        </nav>
-                    </div>
-
-                    {/* Right side - Actions */}
-                    <div className='flex items-center space-x-4'>
-                        {isAuthenticated ? (
-                            <>
-                                <div className='flex items-center space-x-4'>
-                                    <span className='text-sm text-white/70'>{username}</span>
-                                    <Button
-                                        onClick={onSave}
-                                        className='bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white'
-                                    >
-                                        Save Configuration
-                                    </Button>
-                                    <Button
-                                        variant='ghost'
-                                        onClick={logout}
-                                        className='text-white/70 hover:text-white'
-                                    >
-                                        Sign Out
-                                    </Button>
-                                </div>
-                            </>
-                        ) : (
-                            <Button
-                                onClick={login}
-                                className='inline-flex items-center space-x-2 bg-white/10 hover:bg-white/20 text-white'
-                            >
-                                <Github className='w-4 h-4' />
-                                <span>Sign in with GitHub</span>
-                            </Button>
-                        )}
-                    </div>
+        <header className="w-full border-b border-zinc-800 bg-zinc-950 py-3">
+            <div className="container mx-auto flex items-center justify-between px-4">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-xl font-bold text-white">ZSH Config</h1>
+                    <ExpandableTabs tabs={tabs} />
                 </div>
             </div>
-        </div>
+        </header>
     )
 }

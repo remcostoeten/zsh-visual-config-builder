@@ -2,7 +2,10 @@
 import React, { useRef } from 'react'
 import { motion } from 'framer-motion'
 import Draggable, { DraggableData, DraggableEvent } from 'react-draggable'
-import { File, Edit2, Link, Trash2 } from 'lucide-react'
+import { File, Edit2, Link, Trash2, Pencil } from 'lucide-react'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { useToast } from "../../../components/ui/toast"
 
 import MonacoEditorModal from './monaco-editor'
 import { useCanvasStore } from '../canvas-slice'
@@ -31,6 +34,8 @@ export function DraggableNode({
     const [showEditor, setShowEditor] = React.useState(false)
     const { linkingNode, finishLinking } = useCanvasStore()
     const nodeRef = useRef<HTMLDivElement>(null)
+    const setNodePosition = useCanvasStore(state => state.setNodePosition)
+    const { addToast } = useToast()
 
     // const sourceFiles = node.content.match(/source.*\.sh/g) || [];
     // const isLinking = linkingNode !== null;
@@ -48,6 +53,7 @@ export function DraggableNode({
 
     const handleDrag = (_: DraggableEvent, data: DraggableData) => {
         onDrag(node.id, { x: data.x, y: data.y })
+        setNodePosition(node.id, { x: data.x, y: data.y })
     }
 
     const handleStop = (_: DraggableEvent, data: DraggableData) => {
@@ -66,26 +72,19 @@ export function DraggableNode({
     const handleNodeClick = (e: React.MouseEvent) => {
         e.stopPropagation()
         if (linkingNode && linkingNode.id !== node.id) {
-            if (
-                (linkingNode.type === 'parent' && node.type === 'injector') ||
-                (node.type === 'main' && linkingNode.type === 'child')
-            ) {
-                finishLinking(node.id)
-
-                // When linking an injector to main node
-                if (linkingNode.type === 'parent') {
-                    onUpdate(linkingNode.id, {
-                        content: (linkingNode.content || '') + `source "${node.title}.sh"\n`
-                    })
-                }
-                // When linking from child to main node
-                else if (node.type === 'main') {
-                    const linkingTitle = (linkingNode as unknown as { title: string }).title
-                    onUpdate(node.id, {
-                        content: (node.content || '') + `source "${linkingTitle}.sh"\n`
-                    })
-                }
+            const sourceNode = useCanvasStore.getState().nodes[linkingNode.id]
+            
+            // Check linking rules
+            if (sourceNode.type === 'injector' && node.type !== 'partial') {
+                addToast('Injectors can only source partial nodes', 'error')
+                return
             }
+            if (node.type === 'partial' && sourceNode.type !== 'injector') {
+                addToast('Partials can only be linked to injector nodes', 'error')
+                return
+            }
+
+            finishLinking(node.id)
         }
     }
 
@@ -115,6 +114,35 @@ export function DraggableNode({
 
     // Add this new function to determine if shell helpers should be disabled
     const isShellHelpersDisabled = node.type === 'main'
+
+    const handleDoubleClick = () => {
+        setIsEditing(true)
+    }
+
+    const previewContent = node.content ? (
+        <div className="max-h-[24px] overflow-hidden text-xs">
+            <SyntaxHighlighter
+                language="bash"
+                style={vscDarkPlus}
+                customStyle={{
+                    margin: 0,
+                    padding: '2px 4px',
+                    background: 'transparent',
+                    fontSize: '11px',
+                }}
+            >
+                {node.content.split('\n')[0]}
+            </SyntaxHighlighter>
+        </div>
+    ) : (
+        <div className="flex items-center gap-1 text-zinc-400 text-xs">
+            <Pencil size={12} />
+            Edit Contents
+        </div>
+    )
+
+    // Only show link button for injectors
+    const showLinkButton = node.type === 'injector'
 
     return (
         <>
@@ -174,21 +202,21 @@ export function DraggableNode({
                                 >
                                     <Edit2 className='w-3 h-3' />
                                 </button>
+                                {showLinkButton && (
+                                    <button
+                                        onClick={() => onLink?.(node.id)}
+                                        className='p-1 text-white/40 hover:text-white/90 transition-colors rounded hover:bg-white/[0.06]'
+                                    >
+                                        <Link className='w-3 h-3' />
+                                    </button>
+                                )}
                                 {node.type !== 'main' && (
-                                    <>
-                                        <button
-                                            onClick={() => onLink?.(node.id)}
-                                            className='p-1 text-white/40 hover:text-white/90 transition-colors rounded hover:bg-white/[0.06]'
-                                        >
-                                            <Link className='w-3 h-3' />
-                                        </button>
-                                        <button
-                                            onClick={() => onDelete?.(node.id)}
-                                            className='p-1 text-white/40 hover:text-white/90 transition-colors rounded hover:bg-white/[0.06]'
-                                        >
-                                            <Trash2 className='w-3 h-3' />
-                                        </button>
-                                    </>
+                                    <button
+                                        onClick={() => onDelete?.(node.id)}
+                                        className='p-1 text-white/40 hover:text-white/90 transition-colors rounded hover:bg-white/[0.06]'
+                                    >
+                                        <Trash2 className='w-3 h-3' />
+                                    </button>
                                 )}
                             </div>
                         </div>
@@ -198,7 +226,7 @@ export function DraggableNode({
                         >
                             <div className='flex items-center gap-2 text-white/40 group-hover:text-white/70'>
                                 <File className='w-3.5 h-3.5' />
-                                <span className='text-[11px]'>Edit Contents</span>
+                                {previewContent}
                             </div>
                         </button>
                     </motion.div>
@@ -206,13 +234,13 @@ export function DraggableNode({
             </Draggable>
 
             <MonacoEditorModal
-                isOpen={showEditor}
-                onClose={() => setShowEditor(false)}
+                isOpen={isEditing}
+                onClose={() => setIsEditing(false)}
                 title={node.title}
                 content={node.content}
                 onSave={content => {
                     onUpdate(node.id, { content })
-                    setShowEditor(false)
+                    setIsEditing(false)
                 }}
                 disableShellHelpers={isShellHelpersDisabled}
                 isMainNode={node.type === 'main'}

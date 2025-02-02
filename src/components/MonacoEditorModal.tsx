@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Editor from '@monaco-editor/react'
 import { validateShellScript } from '../utils/shell-validation'
 import ShellHelpers from './ShellHelpers'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
+import { Button } from './ui/button'
 
 interface Props {
     isOpen: boolean
@@ -10,11 +11,46 @@ interface Props {
     title: string
     content: string
     onSave: (content: string) => void
+    isMainNode?: boolean
 }
 
-export default function MonacoEditorModal({ isOpen, onClose, title, content, onSave }: Props) {
+export default function MonacoEditorModal({
+    isOpen,
+    onClose,
+    title,
+    content,
+    onSave,
+    isMainNode
+}: Props) {
     const [editorContent, setEditorContent] = React.useState(content)
     const [validation, setValidation] = React.useState({ isValid: true })
+    const dialogContentRef = useRef<HTMLDivElement>(null)
+
+    // Reset content when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setEditorContent(content)
+        }
+    }, [isOpen, content])
+
+    // Handle escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen) {
+                onClose()
+            }
+        }
+
+        window.addEventListener('keydown', handleEscape)
+        return () => window.removeEventListener('keydown', handleEscape)
+    }, [isOpen, onClose])
+
+    const handleInteractOutside = (e: React.MouseEvent) => {
+        // Check if the click is actually outside the modal content
+        if (dialogContentRef.current && !dialogContentRef.current.contains(e.target as Node)) {
+            onClose()
+        }
+    }
 
     const handleContentChange = (value: string = '') => {
         setEditorContent(value)
@@ -29,8 +65,13 @@ export default function MonacoEditorModal({ isOpen, onClose, title, content, onS
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogTitle className='text-lg font-medium text-white'>{title}</DialogTitle>
+            <DialogContent 
+                ref={dialogContentRef}
+                className='sm:max-w-[1200px] h-[800px]'
+                onEscapeKeyDown={onClose}
+                onPointerDownOutside={handleInteractOutside}
+            >
+                <DialogTitle>{title}</DialogTitle>
                 <div className='flex justify-between items-center mb-4'>
                     <div>
                         {!validation.isValid && (
@@ -38,23 +79,24 @@ export default function MonacoEditorModal({ isOpen, onClose, title, content, onS
                         )}
                     </div>
                     <div className='space-x-2'>
-                        <button
+                        <Button
                             onClick={() => onSave(editorContent)}
                             className='px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700'
                             disabled={!validation.isValid}
                         >
                             Save
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={onClose}
                             className='px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700'
                         >
                             Close
-                        </button>
+                        </Button>
                     </div>
                 </div>
+
                 <div className='flex gap-4 h-[calc(100%-60px)]'>
-                    <div className='flex-1'>
+                    <div className={isMainNode ? 'w-full' : 'flex-1'}>
                         <Editor
                             height='100%'
                             value={editorContent}
@@ -66,14 +108,45 @@ export default function MonacoEditorModal({ isOpen, onClose, title, content, onS
                                 fontSize: 14,
                                 lineNumbers: 'on',
                                 scrollBeyondLastLine: false,
-                                automaticLayout: true
+                                automaticLayout: true,
+                                tabSize: 2,
+                                insertSpaces: true,
+                                autoIndent: 'full',
+                                formatOnPaste: true
                             }}
                         />
                     </div>
-                    <div className='w-[300px]'>
-                        <ShellHelpers onInsertSnippet={handleInsertSnippet} />
-                    </div>
+                    {!isMainNode && (
+                        <div className='w-[300px]'>
+                            <ShellHelpers onInsertSnippet={handleInsertSnippet} />
+                        </div>
+                    )}
                 </div>
+
+                {isMainNode && (
+                    <div className='mt-4 p-4 bg-[#1E1E1E] rounded-lg'>
+                        <h3 className='text-sm font-medium text-white/80 mb-2'>Main Configuration</h3>
+                        <p className='text-xs text-white/60 mb-4'>
+                            The .zshrc file should only contain:
+                            <ul className='list-disc list-inside mt-2 space-y-1'>
+                                <li>Source commands for modules</li>
+                                <li>Directory structure setup</li>
+                                <li>Comments for documentation</li>
+                            </ul>
+                        </p>
+                        <div className='space-y-2'>
+                            <code className='block text-xs bg-black/20 p-2 rounded text-white/70'>
+                                # Create ZSH config directories
+                                [ ! -d ~/.zsh ] && mkdir -p ~/.zsh/{core,git,node}
+                                
+                                # Source configuration files
+                                source ~/.zsh/core/aliases.sh
+                                source ~/.zsh/git/config.sh
+                                source ~/.zsh/node/setup.sh
+                            </code>
+                        </div>
+                    </div>
+                )}
             </DialogContent>
         </Dialog>
     )

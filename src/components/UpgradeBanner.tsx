@@ -30,8 +30,8 @@ interface FeaturePromoBannerProps {
 }
 
 export function FeaturePromoBanner({
-    buttonText = 'Try New Features',
-    description = 'Check out our latest AI-powered canvas tools',
+    buttonText = 'New feature 🎊',
+    description = 'You can now login with your GitHub account and store your configurations in your own Gist!',
     onClick,
     className,
     storageKey = 'feature-banner-shown'

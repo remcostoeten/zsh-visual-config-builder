@@ -17,7 +17,9 @@
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-slot": "^1.0.2",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "concurrently": "^9.1.2",
     "date-fns": "^3.3.1",
     "framer-motion": "^10.18.0",
@@ -28,10 +30,11 @@
     "react-dom": "^18.3.1",
     "react-draggable": "^4.4.6",
     "react-router-dom": "^6.22.0",
+    "react-syntax-highlighter": "^15.6.1",
     "shell-parse": "^0.0.2",
-    "zustand": "^4.5.2",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^2.0.0"
+    "tailwind-merge": "^2.6.0",
+    "usehooks-ts": "^3.1.0",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

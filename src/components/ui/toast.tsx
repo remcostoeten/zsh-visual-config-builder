@@ -1,66 +1,80 @@
-'use client'
+"use client"
 
-import { Save, RotateCcw } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import * as React from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { XIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-interface ToastProps {
-    state: {
-        type: 'initial' | 'loading' | 'success' | 'error'
-        message?: string
-    }
-    onReset: () => void
-    onSave: () => void
+interface Toast {
+  id: string
+  message: string
+  type: "error" | "success"
 }
 
-const springConfig = {
-    type: 'spring',
-    stiffness: 500,
-    damping: 30,
-    mass: 1
+interface ToastContextType {
+  toasts: Toast[]
+  addToast: (message: string, type: Toast["type"]) => void
+  removeToast: (id: string) => void
 }
 
-export function Toast({ state, onReset, onSave }: ToastProps) {
-    return (
-        <AnimatePresence>
-            <motion.div
-                className='bg-[#252525] border border-[#333] rounded-lg shadow-lg px-4 py-2 flex items-center gap-3'
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    transition: springConfig
-                }}
-                exit={{
-                    opacity: 0,
-                    y: 20,
-                    scale: 0.95,
-                    transition: { duration: 0.2 }
-                }}
+const ToastContext = React.createContext<ToastContextType | undefined>(undefined)
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = React.useState<Toast[]>([])
+
+  const addToast = React.useCallback((message: string, type: Toast["type"]) => {
+    const id = Math.random().toString(36).slice(2)
+    setToasts(prev => [...prev, { id, message, type }])
+    setTimeout(() => removeToast(id), 3000)
+  }, [])
+
+  const removeToast = React.useCallback((id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }, [])
+
+  return (
+    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+      {children}
+      <ToastContainer />
+    </ToastContext.Provider>
+  )
+}
+
+function ToastContainer() {
+  const context = React.useContext(ToastContext)
+  if (!context) throw new Error("useToast must be used within ToastProvider")
+  const { toasts, removeToast } = context
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      <AnimatePresence>
+        {toasts.map(toast => (
+          <motion.div
+            key={toast.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-white shadow-lg",
+              toast.type === "error" ? "bg-red-600" : "bg-emerald-600"
+            )}
+          >
+            <span>{toast.message}</span>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="rounded-sm opacity-70 transition-opacity hover:opacity-100"
             >
-                <span className='text-sm text-white/70'>
-                    {state.message || 'You have unsaved changes'}
-                </span>
-
-                <div className='flex items-center gap-2'>
-                    <button
-                        onClick={onSave}
-                        className='text-xs px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 flex items-center gap-1'
-                    >
-                        <Save size={12} />
-                        Save
-                    </button>
-                    <button
-                        onClick={onReset}
-                        className='text-xs px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-white/70 flex items-center gap-1'
-                    >
-                        <RotateCcw size={12} />
-                        Reset
-                    </button>
-                </div>
-            </motion.div>
-        </AnimatePresence>
-    )
+              <XIcon size={14} />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
 }
 
-export default Toast
+export function useToast() {
+  const context = React.useContext(ToastContext)
+  if (!context) throw new Error("useToast must be used within ToastProvider")
+  return context
+}
